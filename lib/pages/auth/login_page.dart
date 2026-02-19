@@ -2,101 +2,307 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 
-class LoginPage extends StatelessWidget {
-  LoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
-  // Perbaikan: Gunakan Get.find dengan benar
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final AuthController authController = Get.find<AuthController>();
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  final emailKosong = false.obs;
-  final passwordKosong = false.obs;
+  var emailError = ''.obs;
+  var passwordError = ''.obs;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(
+        title: const Text('Login Admin'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false, // Menghilangkan tombol back
+      ),
       body: Obx(
         () => authController.isLoading.value
-            ? const Center(child: CircularProgressIndicator())
-            : Padding(
-                padding: const EdgeInsets.all(16),
+            ? const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Silahkan Login',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Memproses login...'),
+                  ],
+                ),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+
+                    // Header
+                    Center(
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.admin_panel_settings,
+                              size: 40,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Selamat Datang',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Silahkan login untuk melanjutkan',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 30),
 
+                    const SizedBox(height: 40),
+
+                    // Email Field
                     Obx(
                       () => TextField(
                         controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          border: const OutlineInputBorder(),
-                          errorText: emailKosong.value
-                              ? 'Email tidak boleh kosong'
-                              : null,
+                          hintText: 'contoh@email.com',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.email,
+                            color: Colors.blue,
+                          ),
+                          errorText: emailError.value.isEmpty
+                              ? null
+                              : emailError.value,
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
                         ),
+                        onChanged: (value) => emailError.value = '',
                       ),
                     ),
                     const SizedBox(height: 20),
 
+                    // Password Field
                     Obx(
                       () => TextField(
                         controller: passwordController,
+                        obscureText: true,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          border: const OutlineInputBorder(),
-                          errorText: passwordKosong.value
-                              ? 'Password tidak boleh kosong'
-                              : null,
+                          hintText: 'Masukkan password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.lock,
+                            color: Colors.blue,
+                          ),
+                          errorText: passwordError.value.isEmpty
+                              ? null
+                              : passwordError.value,
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
                         ),
-                        obscureText: true,
+                        onChanged: (value) => passwordError.value = '',
                       ),
                     ),
-                    const SizedBox(height: 20),
 
-                    ElevatedButton(
-                      onPressed: () {
-                        final email = emailController.text.trim();
-                        final password = passwordController.text.trim();
+                    const SizedBox(height: 8),
 
-                        emailKosong.value = email.isEmpty;
-                        passwordKosong.value = password.isEmpty;
-
-                        if (email.isEmpty || password.isEmpty) {
+                    // Forgot Password Link
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
                           Get.snackbar(
-                            'Error',
-                            'Anda belum input data email atau password',
-                            backgroundColor: Colors.red,
+                            'Informasi',
+                            'Fitur lupa password sedang dalam pengembangan',
+                            backgroundColor: Colors.orange,
                             colorText: Colors.white,
+                            snackPosition: SnackPosition.BOTTOM,
                           );
-                          return;
-                        }
-
-                        authController.login(email, password);
-                      },
-                      child: const Text('Login'),
+                        },
+                        child: Text(
+                          'Lupa Password?',
+                          style: TextStyle(
+                            color: Colors.blue.shade700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 20),
 
-                    TextButton(
-                      onPressed: () => Get.toNamed('/register'),
-                      child: const Text('Register'),
+                    // Login Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 3,
+                        ),
+                        child: const Text(
+                          'LOGIN',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Register Link
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Belum punya akun? ',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Get.toNamed('/register'),
+                            child: Text(
+                              'Daftar Sekarang',
+                              style: TextStyle(
+                                color: Colors.blue.shade700,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // Info Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.info,
+                                color: Colors.blue.shade700,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Informasi',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            '• Gunakan akun admin yang sudah terdaftar',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            '• Jika belum punya akun, silahkan register terlebih dahulu',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            '• Hubungi administrator jika mengalami kendala',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
       ),
     );
+  }
+
+  void _login() {
+    // Reset error
+    emailError.value = '';
+    passwordError.value = '';
+
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    // Validasi
+    bool isValid = true;
+
+    if (email.isEmpty) {
+      emailError.value = 'Email wajib diisi';
+      isValid = false;
+    } else if (!GetUtils.isEmail(email)) {
+      emailError.value = 'Format email tidak valid';
+      isValid = false;
+    }
+
+    if (password.isEmpty) {
+      passwordError.value = 'Password wajib diisi';
+      isValid = false;
+    } else if (password.length < 6) {
+      passwordError.value = 'Password minimal 6 karakter';
+      isValid = false;
+    }
+
+    if (!isValid) return;
+
+    // Panggil controller login
+    authController.login(email, password);
   }
 }
