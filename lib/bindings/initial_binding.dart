@@ -9,5 +9,5 @@ class InitialBinding extends Bindings {
     Get.put<UserController>(UserController(), permanent: true);
   }
 
-  // hai
+  // hai ku
 }
