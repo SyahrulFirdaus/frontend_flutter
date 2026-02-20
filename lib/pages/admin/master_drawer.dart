@@ -1,10 +1,12 @@
 // lib/pages/admin/master_drawer.dart
+
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 import 'list_akun.dart';
 import 'lokasi_page.dart';
-import '../../bindings/lokasi_binding.dart'; // Perbaiki path import
+import 'riwayat_semua_user_page.dart'; // Import halaman baru
+import '../../bindings/lokasi_binding.dart';
 
 class MasterDrawer extends StatelessWidget {
   final String currentPage;
@@ -63,11 +65,21 @@ class MasterDrawer extends StatelessWidget {
             onTap: () {
               Get.back();
               if (currentPage != 'lokasi') {
-                // Gunakan LokasiPage tanpa const karena constructor tidak const
-                Get.offAll(
-                  () => LokasiPage(), // Hapus 'const'
-                  binding: LokasiBinding(),
-                );
+                Get.offAll(() => LokasiPage(), binding: LokasiBinding());
+              }
+            },
+          ),
+
+          // ===== RIWAYAT SEMUA USER =====
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text('Riwayat Semua User'),
+            selected: currentPage == 'riwayat_semua_user',
+            selectedTileColor: Colors.blue.shade50,
+            onTap: () {
+              Get.back();
+              if (currentPage != 'riwayat_semua_user') {
+                Get.to(() => const RiwayatSemuaUserPage());
               }
             },
           ),

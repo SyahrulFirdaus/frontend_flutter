@@ -8,8 +8,8 @@ class AuthController extends GetxController {
   static AuthController instance = Get.find();
 
   final box = GetStorage();
-  final String baseUrl = 'http://10.0.2.2:8000/api';
-  // final String baseUrl = 'http:// 192.168.95.220:8000/api';
+  // final String baseUrl = 'http://10.0.2.2:8000/api';
+  final String baseUrl = 'http://192.168.137.1:8000/api';
 
   var isLoading = false.obs;
   var token = ''.obs;

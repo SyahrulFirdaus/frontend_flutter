@@ -8,6 +8,4 @@ class InitialBinding extends Bindings {
     Get.put<AuthController>(AuthController(), permanent: true);
     Get.put<UserController>(UserController(), permanent: true);
   }
-
-  // hai ku
 }
