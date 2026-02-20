@@ -267,7 +267,7 @@ class _MultipleEntryTab extends GetView<LokasiController> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: controller.multipleLokasiEntries.length,
                 itemBuilder: (context, index) {
-                  return _buildMultipleEntryItem(index);
+                  return _EntryItem(index: index, controller: controller);
                 },
               ),
             ),
@@ -336,153 +336,6 @@ class _MultipleEntryTab extends GetView<LokasiController> {
         ),
       ),
     );
-  }
-
-  Widget _buildMultipleEntryItem(int index) {
-    return Obx(() {
-      final entry = controller.multipleLokasiEntries[index];
-      final lokasi = entry['lokasi'] as RxString;
-      final koordinat = entry['koordinat'] as RxString;
-      final isValid = entry['isValid'] as RxBool;
-
-      // Parse koordinat untuk map preview
-      LatLng? mapLocation;
-      if (koordinat.value.isNotEmpty) {
-        try {
-          final parts = koordinat.value.split(',');
-          if (parts.length == 2) {
-            final lat = double.tryParse(parts[0].trim());
-            final lng = double.tryParse(parts[1].trim());
-            if (lat != null && lng != null) {
-              mapLocation = LatLng(lat, lng);
-            }
-          }
-        } catch (e) {
-          print('Error parsing koordinat: $e');
-        }
-      }
-
-      return Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isValid.value ? Colors.green.shade200 : Colors.grey.shade300,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: isValid.value ? Colors.green : Colors.grey,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      isValid.value ? 'Entry Valid' : 'Belum Lengkap',
-                      style: TextStyle(
-                        color: isValid.value ? Colors.green : Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  if (controller.multipleLokasiEntries.length > 1)
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle, color: Colors.red),
-                      onPressed: () => controller.removeLokasiEntry(index),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              TextField(
-                controller: TextEditingController(text: lokasi.value),
-                decoration: InputDecoration(
-                  labelText: 'Lokasi ${index + 1}',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  isDense: true,
-                  prefixIcon: const Icon(Icons.place, size: 20),
-                ),
-                onChanged: (value) =>
-                    controller.updateLokasiEntry(index, 'lokasi', value),
-              ),
-              const SizedBox(height: 8),
-
-              TextField(
-                controller: TextEditingController(text: koordinat.value),
-                decoration: InputDecoration(
-                  labelText: 'Koordinat ${index + 1}',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  isDense: true,
-                  prefixIcon: const Icon(Icons.location_on, size: 20),
-                  hintText: 'Contoh: -6.893361, 107.602376',
-                ),
-                onChanged: (value) =>
-                    controller.updateLokasiEntry(index, 'koordinat', value),
-              ),
-
-              // Preview Map jika koordinat valid
-              if (mapLocation != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  height: 150,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: mapLocation,
-                        zoom: 14,
-                      ),
-                      markers: {
-                        Marker(
-                          markerId: MarkerId('preview_$index'),
-                          position: mapLocation,
-                          infoWindow: InfoWindow(
-                            title: lokasi.value.isEmpty
-                                ? 'Lokasi ${index + 1}'
-                                : lokasi.value,
-                          ),
-                        ),
-                      },
-                      zoomControlsEnabled: false,
-                      mapToolbarEnabled: false,
-                      myLocationButtonEnabled: false,
-                      gestureRecognizers: const {},
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      );
-    });
   }
 
   // ========== TABEL LOKASI ==========
@@ -667,5 +520,200 @@ class _MultipleEntryTab extends GetView<LokasiController> {
         ],
       ),
     );
+  }
+}
+
+// ========== WIDGET UNTUK SETIAP ENTRY ==========
+class _EntryItem extends StatefulWidget {
+  final int index;
+  final LokasiController controller;
+
+  const _EntryItem({Key? key, required this.index, required this.controller})
+    : super(key: key);
+
+  @override
+  State<_EntryItem> createState() => _EntryItemState();
+}
+
+class _EntryItemState extends State<_EntryItem> {
+  late TextEditingController lokasiController;
+  late TextEditingController koordinatController;
+
+  @override
+  void initState() {
+    super.initState();
+    final entry = widget.controller.multipleLokasiEntries[widget.index];
+    lokasiController = TextEditingController(
+      text: entry['lokasi']?.value ?? '',
+    );
+    koordinatController = TextEditingController(
+      text: entry['koordinat']?.value ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    lokasiController.dispose();
+    koordinatController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final entry = widget.controller.multipleLokasiEntries[widget.index];
+      final lokasi = entry['lokasi'] as RxString;
+      final koordinat = entry['koordinat'] as RxString;
+      final isValid = entry['isValid'] as RxBool;
+
+      // Parse koordinat untuk map preview
+      LatLng? mapLocation;
+      if (koordinat.value.isNotEmpty) {
+        try {
+          final parts = koordinat.value.split(',');
+          if (parts.length == 2) {
+            final lat = double.tryParse(parts[0].trim());
+            final lng = double.tryParse(parts[1].trim());
+            if (lat != null && lng != null) {
+              mapLocation = LatLng(lat, lng);
+            }
+          }
+        } catch (e) {
+          print('Error parsing koordinat: $e');
+        }
+      }
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isValid.value ? Colors.green.shade200 : Colors.grey.shade300,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: isValid.value ? Colors.green : Colors.grey,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${widget.index + 1}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isValid.value ? 'Entry Valid' : 'Belum Lengkap',
+                      style: TextStyle(
+                        color: isValid.value ? Colors.green : Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (widget.controller.multipleLokasiEntries.length > 1)
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle, color: Colors.red),
+                      onPressed: () =>
+                          widget.controller.removeLokasiEntry(widget.index),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              TextField(
+                controller: lokasiController,
+                decoration: InputDecoration(
+                  labelText: 'Lokasi ${widget.index + 1}',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  isDense: true,
+                  prefixIcon: const Icon(Icons.place, size: 20),
+                ),
+                onChanged: (value) {
+                  widget.controller.updateLokasiEntry(
+                    widget.index,
+                    'lokasi',
+                    value,
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+
+              TextField(
+                controller: koordinatController,
+                decoration: InputDecoration(
+                  labelText: 'Koordinat ${widget.index + 1}',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  isDense: true,
+                  prefixIcon: const Icon(Icons.location_on, size: 20),
+                  hintText: 'Contoh: -6.893361, 107.602376',
+                ),
+                onChanged: (value) {
+                  widget.controller.updateLokasiEntry(
+                    widget.index,
+                    'koordinat',
+                    value,
+                  );
+                },
+              ),
+
+              // Preview Map jika koordinat valid
+              if (mapLocation != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: mapLocation,
+                        zoom: 14,
+                      ),
+                      markers: {
+                        Marker(
+                          markerId: MarkerId('preview_${widget.index}'),
+                          position: mapLocation,
+                          infoWindow: InfoWindow(
+                            title: lokasi.value.isEmpty
+                                ? 'Lokasi ${widget.index + 1}'
+                                : lokasi.value,
+                          ),
+                        ),
+                      },
+                      zoomControlsEnabled: false,
+                      mapToolbarEnabled: false,
+                      myLocationButtonEnabled: false,
+                      gestureRecognizers: const {},
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    });
   }
 }
