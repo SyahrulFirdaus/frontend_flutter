@@ -23,20 +23,21 @@ class UserPage extends GetView<AuthController> {
         ),
         child: SafeArea(
           child: Obx(() {
-            // Ambil data user dari controller dengan cast yang aman
+            // Ambil data user dari controller
             final Map<String, dynamic> userData = Map<String, dynamic>.from(
               controller.user,
             );
+            final lokasiController = Get.find<UserLokasiController>();
 
             return Column(
               children: [
                 // Header dengan Profile dan Logout
-                _buildHeader(userData),
+                _buildHeader(userData, lokasiController),
 
                 const SizedBox(height: 20),
 
-                // Statistik Card
-                _buildStatistikCard(),
+                // Status Absen Hari Ini
+                _buildStatusCard(lokasiController),
 
                 const SizedBox(height: 20),
 
@@ -66,7 +67,7 @@ class UserPage extends GetView<AuthController> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Grid Menu - HANYA 2 MENU (Absen & Riwayat)
+                          // Grid Menu - 3 MENU (Absen Masuk, Absen Pulang, Riwayat)
                           Expanded(
                             child: GridView.count(
                               crossAxisCount: 2,
@@ -74,30 +75,69 @@ class UserPage extends GetView<AuthController> {
                               mainAxisSpacing: 16,
                               childAspectRatio: 1.1,
                               children: [
+                                // Absen Masuk
                                 _buildMenuCard(
-                                  icon: Icons.fingerprint,
-                                  label: 'Absen Kehadiran',
+                                  icon: Icons.login,
+                                  label: 'Absen Masuk',
                                   color: Colors.blue,
+                                  isDisabled: lokasiController.sudahMasuk.value,
                                   onTap: () {
-                                    // Inisialisasi controller jika belum ada
-                                    if (!Get.isRegistered<
-                                      UserLokasiController
-                                    >()) {
-                                      Get.put(UserLokasiController());
+                                    if (lokasiController.sudahMasuk.value) {
+                                      Get.snackbar(
+                                        'Info',
+                                        'Anda sudah absen masuk hari ini',
+                                        backgroundColor: Colors.orange,
+                                        colorText: Colors.white,
+                                        snackPosition: SnackPosition.TOP,
+                                      );
+                                      return;
                                     }
 
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (_) => const AbsensiModal(),
-                                    );
+                                    _openAbsensiModal(context, 'masuk');
                                   },
                                 ),
+
+                                // Absen Pulang
+                                _buildMenuCard(
+                                  icon: Icons.logout,
+                                  label: 'Absen Pulang',
+                                  color: Colors.orange,
+                                  isDisabled:
+                                      !lokasiController.sudahMasuk.value ||
+                                      lokasiController.sudahPulang.value,
+                                  onTap: () {
+                                    if (!lokasiController.sudahMasuk.value) {
+                                      Get.snackbar(
+                                        'Info',
+                                        'Anda harus absen masuk terlebih dahulu',
+                                        backgroundColor: Colors.orange,
+                                        colorText: Colors.white,
+                                        snackPosition: SnackPosition.TOP,
+                                      );
+                                      return;
+                                    }
+
+                                    if (lokasiController.sudahPulang.value) {
+                                      Get.snackbar(
+                                        'Info',
+                                        'Anda sudah absen pulang hari ini',
+                                        backgroundColor: Colors.orange,
+                                        colorText: Colors.white,
+                                        snackPosition: SnackPosition.TOP,
+                                      );
+                                      return;
+                                    }
+
+                                    _openAbsensiModal(context, 'pulang');
+                                  },
+                                ),
+
+                                // Riwayat Absensi
                                 _buildMenuCard(
                                   icon: Icons.history,
                                   label: 'Riwayat Absensi',
                                   color: Colors.green,
+                                  isDisabled: false,
                                   onTap: () {
                                     final lokasiController =
                                         Get.find<UserLokasiController>();
@@ -105,7 +145,6 @@ class UserPage extends GetView<AuthController> {
                                     Get.to(() => const RiwayatAbsensiPage());
                                   },
                                 ),
-                                // Menu Kalender dan Pengaturan TELAH DIHAPUS
                               ],
                             ),
                           ),
@@ -129,19 +168,40 @@ class UserPage extends GetView<AuthController> {
     );
   }
 
-  Widget _buildHeader(Map<String, dynamic> user) {
+  // Fungsi untuk membuka modal absensi
+  void _openAbsensiModal(BuildContext context, String tipe) {
+    // Inisialisasi controller jika belum ada
+    if (!Get.isRegistered<UserLokasiController>()) {
+      Get.put(UserLokasiController());
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AbsensiModal(tipe: tipe),
+    );
+  }
+
+  Widget _buildHeader(
+    Map<String, dynamic> user,
+    UserLokasiController lokasiController,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          // Profile Picture
+          // Profile Inisial (tanpa logo/gambar)
           Container(
-            width: 60,
-            height: 60,
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
-              color: Colors.white,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.white, Colors.blue.shade100],
+              ),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.grey.withOpacity(0.3),
@@ -151,21 +211,20 @@ class UserPage extends GetView<AuthController> {
                 ),
               ],
             ),
-            child: CircleAvatar(
-              backgroundColor: Colors.blue.shade100,
+            child: Center(
               child: Text(
                 (user['name'] != null && user['name'].toString().isNotEmpty)
                     ? user['name'].toString()[0].toUpperCase()
                     : 'U',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue.shade700,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
 
           // User Info
           Expanded(
@@ -210,6 +269,31 @@ class UserPage extends GetView<AuthController> {
             ),
           ),
 
+          // Refresh Button
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              onPressed: () {
+                lokasiController.cekStatusHariIni();
+                lokasiController.fetchUserLokasi();
+                Get.snackbar(
+                  'Sukses',
+                  'Data berhasil di-refresh',
+                  backgroundColor: Colors.green,
+                  colorText: Colors.white,
+                  snackPosition: SnackPosition.TOP,
+                  duration: const Duration(seconds: 1),
+                );
+              },
+              tooltip: 'Refresh Data',
+            ),
+          ),
+
           // Logout Button
           Container(
             decoration: BoxDecoration(
@@ -239,7 +323,7 @@ class UserPage extends GetView<AuthController> {
     );
   }
 
-  Widget _buildStatistikCard() {
+  Widget _buildStatusCard(UserLokasiController controller) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(16),
@@ -255,89 +339,204 @@ class UserPage extends GetView<AuthController> {
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildStatistikItem(
-            icon: Icons.calendar_month,
-            value: '12',
-            label: 'Total Absen',
-            color: Colors.blue,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Status Absen Hari Ini',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              ),
+              // Tombol refresh kecil di status card
+              InkWell(
+                onTap: () {
+                  controller.cekStatusHariIni();
+                  Get.snackbar(
+                    'Sukses',
+                    'Status diperbarui',
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                    snackPosition: SnackPosition.TOP,
+                    duration: const Duration(seconds: 1),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.refresh,
+                    color: Colors.blue,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
           ),
-          Container(height: 30, width: 1, color: Colors.grey.shade300),
-          _buildStatistikItem(
-            icon: Icons.check_circle,
-            value: '8',
-            label: 'Tepat Waktu',
-            color: Colors.green,
-          ),
-          Container(height: 30, width: 1, color: Colors.grey.shade300),
-          _buildStatistikItem(
-            icon: Icons.warning,
-            value: '0',
-            label: 'Terlambat',
-            color: Colors.orange,
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatusItem(
+                icon: Icons.login,
+                label: 'Masuk',
+                status: controller.sudahMasuk.value,
+                waktu: controller.dataMasuk.value != null
+                    ? _formatWaktuSimple(
+                        controller.dataMasuk.value!['waktu_absen']
+                                ?.toString() ??
+                            '',
+                      )
+                    : null,
+                color: Colors.blue,
+              ),
+              Container(height: 30, width: 1, color: Colors.grey.shade300),
+              _buildStatusItem(
+                icon: Icons.logout,
+                label: 'Pulang',
+                status: controller.sudahPulang.value,
+                waktu: controller.dataPulang.value != null
+                    ? _formatWaktuSimple(
+                        controller.dataPulang.value!['waktu_absen']
+                                ?.toString() ??
+                            '',
+                      )
+                    : null,
+                color: Colors.orange,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatistikItem({
+  Widget _buildStatusItem({
     required IconData icon,
-    required String value,
     required String label,
+    required bool status,
+    String? waktu,
     required Color color,
   }) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: status ? color.withOpacity(0.1) : Colors.grey.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: status ? color : Colors.grey.shade400,
+              size: 24,
+            ),
           ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: color,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: status ? color : Colors.grey.shade400,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
-        ),
-      ],
+          if (status && waktu != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              waktu,
+              style: TextStyle(
+                fontSize: 10,
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ] else if (!status) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Belum',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey.shade500,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
+  }
+
+  String _formatWaktuSimple(String waktuStr) {
+    try {
+      if (waktuStr.contains('T')) {
+        final parts = waktuStr.split('T');
+        String jam = parts[1];
+        jam = jam.replaceAll(RegExp(r'\..*$'), '');
+        jam = jam.replaceAll(RegExp(r'Z$'), '');
+        if (jam.contains(':')) {
+          final jamParts = jam.split(':');
+          if (jamParts.length >= 2) {
+            return '${jamParts[0]}:${jamParts[1]}';
+          }
+        }
+        return jam;
+      }
+      if (waktuStr.contains(' ')) {
+        final parts = waktuStr.split(' ');
+        if (parts.length >= 2) {
+          String jam = parts[1];
+          if (jam.contains(':')) {
+            final jamParts = jam.split(':');
+            if (jamParts.length >= 2) {
+              return '${jamParts[0]}:${jamParts[1]}';
+            }
+          }
+          return jam;
+        }
+      }
+      return waktuStr;
+    } catch (e) {
+      return '-';
+    }
   }
 
   Widget _buildMenuCard({
     required IconData icon,
     required String label,
     required Color color,
+    required bool isDisabled,
     required VoidCallback onTap,
   }) {
     return InkWell(
-      onTap: onTap,
+      onTap: isDisabled ? null : onTap,
       borderRadius: BorderRadius.circular(15),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDisabled ? Colors.grey.shade100 : Colors.white,
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: Border.all(
+            color: isDisabled ? Colors.grey.shade300 : Colors.grey.shade200,
+          ),
+          boxShadow: isDisabled
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -345,10 +544,16 @@ class UserPage extends GetView<AuthController> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: isDisabled
+                    ? Colors.grey.shade200
+                    : color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 30),
+              child: Icon(
+                icon,
+                color: isDisabled ? Colors.grey.shade400 : color,
+                size: 30,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -356,10 +561,21 @@ class UserPage extends GetView<AuthController> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey.shade800,
+                color: isDisabled ? Colors.grey.shade500 : Colors.grey.shade800,
               ),
               textAlign: TextAlign.center,
             ),
+            if (isDisabled) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Selesai',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.green.shade400,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -392,7 +608,7 @@ class UserPage extends GetView<AuthController> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Absen dengan memilih lokasi yang telah ditentukan. Pastikan GPS dalam keadaan aktif dan Anda berada dalam radius 100 meter dari lokasi absensi.',
+              'Absen masuk dan pulang dengan memilih lokasi yang telah ditentukan. Pastikan GPS aktif dan Anda berada dalam radius 100 meter dari lokasi absensi. Foto wajah akan diambil sebagai bukti.',
               style: TextStyle(
                 fontSize: 11,
                 color: Colors.blue.shade700,
@@ -410,7 +626,9 @@ class UserPage extends GetView<AuthController> {
    MODAL ABSENSI (DROPDOWN + MAP) 
 ============================ */
 class AbsensiModal extends StatefulWidget {
-  const AbsensiModal({super.key});
+  final String tipe; // 'masuk' atau 'pulang'
+
+  const AbsensiModal({super.key, this.tipe = 'masuk'});
 
   @override
   State<AbsensiModal> createState() => _AbsensiModalState();
@@ -480,6 +698,18 @@ class _AbsensiModalState extends State<AbsensiModal> {
     }
   }
 
+  String _getModalTitle() {
+    return widget.tipe == 'masuk' ? 'Absen Masuk' : 'Absen Pulang';
+  }
+
+  String _getButtonText() {
+    return widget.tipe == 'masuk' ? 'KONFIRMASI MASUK' : 'KONFIRMASI PULANG';
+  }
+
+  Color _getButtonColor() {
+    return widget.tipe == 'masuk' ? Colors.blue : Colors.orange;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -504,7 +734,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
             ),
           ),
 
-          // Header
+          // Header dengan tombol refresh
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -512,31 +742,59 @@ class _AbsensiModalState extends State<AbsensiModal> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: _getButtonColor().withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.fingerprint,
-                    color: Colors.blue,
+                  child: Icon(
+                    widget.tipe == 'masuk' ? Icons.login : Icons.logout,
+                    color: _getButtonColor(),
                     size: 24,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Absen Kehadiran',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getModalTitle(),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      Text(
+                        'Pilih lokasi absensi Anda',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                // Tombol refresh di modal
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.refresh,
+                      color: _getButtonColor(),
+                      size: 20,
                     ),
-                    Text(
-                      'Pilih lokasi absensi Anda',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
+                    onPressed: () {
+                      lokasiController.fetchUserLokasi();
+                      Get.snackbar(
+                        'Sukses',
+                        'Daftar lokasi diperbarui',
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                        snackPosition: SnackPosition.TOP,
+                        duration: const Duration(seconds: 1),
+                      );
+                    },
+                    tooltip: 'Refresh Lokasi',
+                  ),
                 ),
               ],
             ),
@@ -604,6 +862,18 @@ class _AbsensiModalState extends State<AbsensiModal> {
                         Text(
                           'Hubungi admin untuk menambahkan lokasi',
                           style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            lokasiController.fetchUserLokasi();
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Refresh'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ],
                     ),
@@ -774,15 +1044,17 @@ class _AbsensiModalState extends State<AbsensiModal> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
+                          color: _getButtonColor().withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.blue.shade200),
+                          border: Border.all(
+                            color: _getButtonColor().withOpacity(0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
                             Icon(
                               Icons.info,
-                              color: Colors.blue.shade700,
+                              color: _getButtonColor(),
                               size: 18,
                             ),
                             const SizedBox(width: 8),
@@ -794,7 +1066,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
                                     selectedLokasiNama ?? '',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.blue.shade700,
+                                      color: _getButtonColor(),
                                       fontSize: 13,
                                     ),
                                   ),
@@ -803,7 +1075,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
                                     selectedLokasiKoordinat ?? '',
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: Colors.blue.shade600,
+                                      color: _getButtonColor().withOpacity(0.8),
                                     ),
                                   ),
                                 ],
@@ -825,13 +1097,20 @@ class _AbsensiModalState extends State<AbsensiModal> {
                         return ElevatedButton(
                           onPressed: (selectedLokasiId != null && !isLoading)
                               ? () async {
-                                  // Submit absensi dengan mengirim koordinat lokasi
-                                  final success = await lokasiController
-                                      .submitAbsensi(
-                                        selectedLokasiId!,
-                                        selectedLokasiNama!,
-                                        selectedLokasiKoordinat!,
-                                      );
+                                  // Submit absensi sesuai tipe
+                                  final success = widget.tipe == 'masuk'
+                                      ? await lokasiController
+                                            .submitAbsensiMasuk(
+                                              selectedLokasiId!,
+                                              selectedLokasiNama!,
+                                              selectedLokasiKoordinat!,
+                                            )
+                                      : await lokasiController
+                                            .submitAbsensiPulang(
+                                              selectedLokasiId!,
+                                              selectedLokasiNama!,
+                                              selectedLokasiKoordinat!,
+                                            );
 
                                   if (success) {
                                     // Tampilkan success dialog
@@ -845,16 +1124,16 @@ class _AbsensiModalState extends State<AbsensiModal> {
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Text(
-                                              'Absensi Berhasil!',
-                                              style: TextStyle(
+                                            Text(
+                                              'Absen ${widget.tipe} Berhasil!',
+                                              style: const TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                             const SizedBox(height: 8),
                                             Text(
-                                              'Anda telah absen di:',
+                                              'Anda telah absen ${widget.tipe} di:',
                                               style: TextStyle(
                                                 color: Colors.grey.shade600,
                                                 fontSize: 12,
@@ -883,9 +1162,11 @@ class _AbsensiModalState extends State<AbsensiModal> {
                                             onPressed: () {
                                               Get.back(); // Tutup dialog sukses
                                               Get.back(); // Tutup modal absensi
-                                              // Refresh data lokasi
+                                              // Refresh data
                                               lokasiController
                                                   .fetchUserLokasi();
+                                              lokasiController
+                                                  .cekStatusHariIni();
                                             },
                                             child: const Text('OK'),
                                           ),
@@ -896,7 +1177,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
                                 }
                               : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor: _getButtonColor(),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -907,7 +1188,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
                             isLoading
                                 ? 'Memproses...'
                                 : (selectedLokasiId != null
-                                      ? 'KONFIRMASI ABSEN'
+                                      ? _getButtonText()
                                       : 'PILIH LOKASI TERLEBIH DAHULU'),
                             style: const TextStyle(
                               fontSize: 14,

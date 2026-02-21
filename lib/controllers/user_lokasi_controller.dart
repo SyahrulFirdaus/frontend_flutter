@@ -15,9 +15,10 @@ import 'auth_controller.dart';
 
 class UserLokasiController extends GetxController {
   final auth = Get.find<AuthController>();
-
-  final String baseUrl =
-      'http://192.168.1.9:8000/api'; // Sesuaikan dengan IP komputer Anda
+  // final String baseUrl = 'http://10.0.2.2:8000/api';
+  // final String baseUrl =
+  //     'http://192.168.1.9:8000/api'; // Sesuaikan dengan IP komputer Anda
+  final String baseUrl = 'http://192.168.1.10:8000/api';
 
   var userLokasis = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;
@@ -26,6 +27,12 @@ class UserLokasiController extends GetxController {
   // Untuk riwayat absensi
   var riwayatAbsensi = <Map<String, dynamic>>[].obs;
   var isLoadingRiwayat = false.obs;
+
+  // Status absen hari ini
+  var sudahMasuk = false.obs;
+  var sudahPulang = false.obs;
+  var dataMasuk = Rxn<Map<String, dynamic>>();
+  var dataPulang = Rxn<Map<String, dynamic>>();
 
   // Lokasi real-time pengguna
   var lokasiSaatIni = ''.obs;
@@ -40,271 +47,37 @@ class UserLokasiController extends GetxController {
   void onInit() {
     super.onInit();
     print('🟢 UserLokasiController diinisialisasi');
+    cekStatusHariIni();
   }
 
-  // ================= DETEKSI WAJAH DENGAN GOOGLE ML KIT =================
-  Future<bool> _detectFace(File imageFile) async {
-    isDetectingFace.value = true;
-
+  // ================= CEK STATUS ABSEN HARI INI =================
+  Future<void> cekStatusHariIni() async {
     try {
-      // Buat InputImage dari file
-      final inputImage = InputImage.fromFile(imageFile);
+      print('📌 Cek status absen hari ini...');
 
-      // Konfigurasi face detector
-      final options = FaceDetectorOptions(
-        enableClassification: true, // Deteksi senyum, mata terbuka
-        enableLandmarks: true, // Deteksi landmark wajah
-        enableContours: true, // Deteksi kontur wajah
-        performanceMode: FaceDetectorMode.fast, // Mode cepat
-      );
-
-      // Buat instance face detector
-      final faceDetector = FaceDetector(options: options);
-
-      // Proses deteksi
-      final List<Face> faces = await faceDetector.processImage(inputImage);
-
-      // Tutup detector untuk hemat memori
-      faceDetector.close();
-
-      print('📸 Jumlah wajah terdeteksi: ${faces.length}');
-
-      // VALIDASI 1: Harus ada wajah
-      if (faces.isEmpty) {
-        Get.snackbar(
-          'Deteksi Wajah Gagal',
-          'Tidak ada wajah terdeteksi. Silakan foto ulang.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          duration: const Duration(seconds: 3),
-        );
-        return false;
-      }
-
-      // VALIDASI 2: Hanya boleh 1 wajah
-      if (faces.length > 1) {
-        Get.snackbar(
-          'Deteksi Wajah Gagal',
-          'Terdeteksi ${faces.length} wajah. Harap foto hanya 1 wajah.',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          duration: const Duration(seconds: 3),
-        );
-        return false;
-      }
-
-      // Ambil wajah pertama
-      Face face = faces.first;
-
-      // VALIDASI 3: Ukuran wajah minimal
-      if (face.boundingBox.width < 100 || face.boundingBox.height < 100) {
-        Get.snackbar(
-          'Kualitas Foto Rendah',
-          'Wajah terlalu kecil. Dekatkan kamera.',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
-        return false;
-      }
-
-      // VALIDASI 4: Pastikan mata terbuka (opsional)
-      if (face.leftEyeOpenProbability != null &&
-          face.rightEyeOpenProbability != null) {
-        if (face.leftEyeOpenProbability! < 0.3 ||
-            face.rightEyeOpenProbability! < 0.3) {
-          Get.snackbar(
-            'Peringatan',
-            'Pastikan mata terbuka',
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.TOP,
-          );
-          // Bisa return false jika ingin mewajibkan mata terbuka
-          // return false;
-        }
-      }
-
-      // VALIDASI 5: Pastikan wajah menghadap ke depan (opsional)
-      if (face.headEulerAngleY != null && face.headEulerAngleY!.abs() > 30) {
-        Get.snackbar(
-          'Peringatan',
-          'Wajah terlalu miring. Hadap lurus ke kamera.',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
-        // return false; // Opsional
-      }
-
-      print('✅ Wajah terdeteksi dengan baik');
-      print('   - Posisi: ${face.boundingBox}');
-      print('   - Probabilitas mata kiri: ${face.leftEyeOpenProbability}');
-      print('   - Probabilitas mata kanan: ${face.rightEyeOpenProbability}');
-      print('   - Probabilitas senyum: ${face.smilingProbability}');
-
-      return true;
-    } catch (e) {
-      print('❌ Error face detection: $e');
-      Get.snackbar(
-        'Error Deteksi',
-        'Gagal mendeteksi wajah. Coba lagi.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
-      return false;
-    } finally {
-      isDetectingFace.value = false;
-    }
-  }
-
-  // ================= AMBIL FOTO DAN DETEKSI WAJAH =================
-  Future<File?> takePhotoWithFaceDetection() async {
-    isTakingPhoto.value = true;
-
-    try {
-      final ImagePicker picker = ImagePicker();
-
-      // Buka kamera dengan kamera depan
-      final XFile? photo = await picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.front,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 80,
-      );
-
-      if (photo == null) {
-        print('⚠️ User membatalkan pengambilan foto');
-        return null;
-      }
-
-      File imageFile = File(photo.path);
-
-      // Deteksi wajah
-      bool isFaceValid = await _detectFace(imageFile);
-
-      if (!isFaceValid) {
-        // Tanya user apakah mau foto ulang?
-        bool retry = await _showRetryDialog();
-        if (retry) {
-          return await takePhotoWithFaceDetection(); // Rekursif
-        } else {
-          return null;
-        }
-      }
-
-      fotoWajah.value = imageFile;
-      print('✅ Foto wajah valid dan siap dikirim');
-      return fotoWajah.value;
-    } catch (e) {
-      print('❌ Error take photo: $e');
-      Get.snackbar(
-        'Error',
-        'Gagal mengambil foto: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
-      return null;
-    } finally {
-      isTakingPhoto.value = false;
-    }
-  }
-
-  // ================= DIALOG FOTO ULANG =================
-  Future<bool> _showRetryDialog() async {
-    Completer<bool> completer = Completer();
-
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Foto Tidak Valid'),
-        content: const Text(
-          'Foto tidak mengandung wajah yang jelas.\nApakah Anda ingin mengambil foto ulang?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Get.back();
-              completer.complete(false);
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/user/absensi/cek-status'),
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer ${auth.token}',
             },
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              completer.complete(true);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Foto Ulang'),
-          ),
-        ],
-      ),
-    );
+          )
+          .timeout(const Duration(seconds: 5));
 
-    return completer.future;
-  }
+      print('📨 Response status: ${response.statusCode}');
 
-  // ================= AMBIL LOKASI REAL-TIME PENGGUNA =================
-  Future<String> getCurrentLocation() async {
-    isGettingLocation.value = true;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        sudahMasuk.value = data['sudah_masuk'] ?? false;
+        sudahPulang.value = data['sudah_pulang'] ?? false;
+        dataMasuk.value = data['data_masuk'];
+        dataPulang.value = data['data_pulang'];
 
-    try {
-      // Cek permission lokasi
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          Get.snackbar(
-            'Izin Ditolak',
-            'Izin lokasi diperlukan untuk absen',
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.TOP,
-          );
-          return '';
-        }
+        print('📊 Status Absen: Masuk=$sudahMasuk, Pulang=$sudahPulang');
       }
-
-      if (permission == LocationPermission.deniedForever) {
-        Get.snackbar(
-          'Izin Ditolak Permanen',
-          'Izin lokasi tidak dapat diminta lagi',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
-        return '';
-      }
-
-      // Ambil posisi saat ini
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      String koordinat = '${position.latitude}, ${position.longitude}';
-      lokasiSaatIni.value = koordinat;
-
-      print('📍 Lokasi real-time: $koordinat');
-      return koordinat;
     } catch (e) {
-      print('❌ Error getCurrentLocation: $e');
-      Get.snackbar(
-        'Error',
-        'Gagal mendapatkan lokasi: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
-      return '';
-    } finally {
-      isGettingLocation.value = false;
+      print('❌ Error cek status: $e');
     }
   }
 
@@ -319,7 +92,12 @@ class UserLokasiController extends GetxController {
     errorMessage.value = '';
 
     try {
-      print('📌 Fetching user lokasi...');
+      print('=' * 50);
+      print('📌 FETCH USER LOKASI - DIMULAI');
+      print('🔑 Token: ${auth.token.substring(0, 20)}...');
+      print('👤 User ID: ${auth.user['id']}');
+      print('👤 User Name: ${auth.user['name']}');
+      print('📌 URL: $baseUrl/user/lokasi');
 
       final response = await http
           .get(
@@ -331,18 +109,34 @@ class UserLokasiController extends GetxController {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('📨 Response: ${response.statusCode}');
+      print('📨 Response status: ${response.statusCode}');
+      print('📨 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final dynamic data = jsonDecode(response.body);
+
         if (data is List) {
           userLokasis.value = List<Map<String, dynamic>>.from(data);
-          print('✅ Lokasi: ${userLokasis.length} data');
+          print('✅ Lokasi ditemukan: ${userLokasis.length} data');
+
+          if (userLokasis.isEmpty) {
+            errorMessage.value = 'Belum ada lokasi yang ditentukan untuk Anda';
+            print('⚠️ Data lokasi kosong');
+          } else {
+            for (var lokasi in userLokasis) {
+              print(
+                '   - ID: ${lokasi['id']}, Nama: ${lokasi['lokasi']}, Koordinat: ${lokasi['koordinat']}',
+              );
+            }
+          }
         } else {
           userLokasis.value = [];
+          errorMessage.value = 'Format data tidak sesuai';
+          print('❌ Data bukan List: $data');
         }
       } else if (response.statusCode == 401) {
         errorMessage.value = 'Sesi habis, silahkan login ulang';
+        print('❌ Unauthorized - Token mungkin expired');
         Get.snackbar(
           'Sesi Habis',
           'Silahkan login ulang',
@@ -351,296 +145,134 @@ class UserLokasiController extends GetxController {
           snackPosition: SnackPosition.TOP,
         );
         Future.delayed(const Duration(seconds: 2), () => auth.logout());
+      } else if (response.statusCode == 403) {
+        errorMessage.value = 'Akses ditolak. Anda bukan user.';
+        print('❌ Forbidden - Bukan role user');
+      } else if (response.statusCode == 404) {
+        errorMessage.value = 'Endpoint tidak ditemukan. Cek URL.';
+        print('❌ 404 Not Found - URL: $baseUrl/user/lokasi');
       } else {
         errorMessage.value = 'Error ${response.statusCode}';
+        print('❌ Error lain: ${response.statusCode}');
       }
     } catch (e) {
       print('❌ Error: $e');
-      errorMessage.value = 'Gagal memuat data';
+      errorMessage.value = 'Gagal memuat data: ${e.toString()}';
     } finally {
       isLoading.value = false;
+      print('📌 FETCH USER LOKASI - SELESAI');
+      print('=' * 50);
     }
   }
 
-  // ================= SUBMIT ABSENSI DENGAN FOTO =================
-  Future<bool> submitAbsensi(
-    String lokasiId,
-    String lokasiNama,
-    String koordinatLokasi,
-  ) async {
-    isLoading.value = true;
+  // ================= DETEKSI WAJAH =================
+  Future<bool> _detectFace(File imageFile) async {
+    isDetectingFace.value = true;
 
     try {
-      print('🔥 SUBMIT ABSENSI - $lokasiNama (ID: $lokasiId)');
+      final inputImage = InputImage.fromFile(imageFile);
 
-      // Validasi token
-      if (auth.token.isEmpty) {
+      final options = FaceDetectorOptions(
+        enableClassification: true,
+        enableLandmarks: true,
+        enableContours: true,
+        performanceMode: FaceDetectorMode.fast,
+      );
+
+      final faceDetector = FaceDetector(options: options);
+      final List<Face> faces = await faceDetector.processImage(inputImage);
+      faceDetector.close();
+
+      print('📸 Jumlah wajah terdeteksi: ${faces.length}');
+
+      if (faces.isEmpty) {
         Get.snackbar(
-          'Error',
-          'Token tidak ditemukan',
+          'Gagal',
+          'Tidak ada wajah terdeteksi',
           backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
         );
         return false;
       }
 
-      // Parse ID
-      final lokasiIdInt = int.tryParse(lokasiId);
-      if (lokasiIdInt == null) {
+      if (faces.length > 1) {
         Get.snackbar(
-          'Error',
-          'ID Lokasi tidak valid',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
-        return false;
-      }
-
-      // Parse koordinat lokasi
-      LatLng? lokasiLatLng;
-      try {
-        final parts = koordinatLokasi.split(',');
-        if (parts.length == 2) {
-          final lat = double.tryParse(parts[0].trim());
-          final lng = double.tryParse(parts[1].trim());
-          if (lat != null && lng != null) {
-            lokasiLatLng = LatLng(lat, lng);
-          }
-        }
-      } catch (e) {
-        print('Error parsing koordinat lokasi: $e');
-      }
-
-      if (lokasiLatLng == null) {
-        Get.snackbar(
-          'Error',
-          'Koordinat lokasi tidak valid',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
-        return false;
-      }
-
-      // Tampilkan dialog konfirmasi lokasi
-      bool lanjutkan = await _showLocationConfirmDialog();
-
-      if (!lanjutkan) {
-        isLoading.value = false;
-        return false;
-      }
-
-      // Ambil lokasi real-time pengguna
-      String titikKoordinatKamu = await getCurrentLocation();
-
-      if (titikKoordinatKamu.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Gagal mendapatkan lokasi Anda',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
-        return false;
-      }
-
-      // Parse koordinat kamu
-      LatLng? kamuLatLng;
-      try {
-        final parts = titikKoordinatKamu.split(',');
-        if (parts.length == 2) {
-          final lat = double.tryParse(parts[0].trim());
-          final lng = double.tryParse(parts[1].trim());
-          if (lat != null && lng != null) {
-            kamuLatLng = LatLng(lat, lng);
-          }
-        }
-      } catch (e) {
-        print('Error parsing koordinat kamu: $e');
-      }
-
-      if (kamuLatLng == null) {
-        Get.snackbar(
-          'Error',
-          'Koordinat kamu tidak valid',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
-        return false;
-      }
-
-      // Hitung jarak antara lokasi absensi dan posisi kamu
-      double jarakMeter = _hitungJarakDalamMeter(lokasiLatLng, kamuLatLng);
-
-      print('📏 Jarak: ${jarakMeter.toStringAsFixed(2)} meter');
-
-      // VALIDASI JARAK: WAJIB maksimal 100 meter
-      const double batasMaksimal = 100.0; // 100 meter
-
-      if (jarakMeter > batasMaksimal) {
-        // Tampilkan dialog error jarak terlalu jauh
-        await _showJarakTerlaluJauhDialog(jarakMeter, batasMaksimal);
-        return false; // Gagal absen
-      }
-
-      // AMBIL FOTO DAN DETEKSI WAJAH
-      File? foto = await takePhotoWithFaceDetection();
-
-      if (foto == null) {
-        // User membatalkan pengambilan foto
-        Get.snackbar(
-          'Info',
-          'Absen dibatalkan',
+          'Gagal',
+          'Terlalu banyak wajah',
           backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
         );
         return false;
       }
 
-      // Kirim data dengan foto
-      return await _submitWithPhoto(
-        lokasiIdInt,
-        lokasiNama,
-        titikKoordinatKamu,
-        foto,
-      );
+      Face face = faces.first;
+
+      if (face.boundingBox.width < 100 || face.boundingBox.height < 100) {
+        Get.snackbar(
+          'Kualitas Rendah',
+          'Wajah terlalu kecil',
+          backgroundColor: Colors.orange,
+        );
+        return false;
+      }
+
+      return true;
     } catch (e) {
-      print('❌ Exception: $e');
-      Get.snackbar(
-        'Error',
-        'Koneksi error: ${e.toString()}',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
+      print('❌ Error face detection: $e');
       return false;
     } finally {
-      isLoading.value = false;
-      fotoWajah.value = null; // Reset foto setelah selesai
+      isDetectingFace.value = false;
     }
   }
 
-  // ================= KIRIM ABSENSI DENGAN FOTO =================
-  Future<bool> _submitWithPhoto(
-    int lokasiIdInt,
-    String lokasiNama,
-    String titikKoordinatKamu,
-    File foto,
-  ) async {
+  // ================= AMBIL FOTO DAN DETEKSI WAJAH =================
+  Future<File?> takePhotoWithFaceDetection() async {
+    isTakingPhoto.value = true;
+
     try {
-      // Buat request multipart untuk mengirim file
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/user/absensi'),
+      final ImagePicker picker = ImagePicker();
+
+      final XFile? photo = await picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.front,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
       );
 
-      // Tambahkan headers
-      request.headers.addAll({
-        'Accept': 'application/json',
-        'Authorization': 'Bearer ${auth.token}',
-      });
-
-      // Tambahkan fields
-      request.fields['lokasi_id'] = lokasiIdInt.toString();
-      request.fields['titik_koordinat_kamu'] = titikKoordinatKamu;
-
-      // Tambahkan file foto
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'foto_wajah',
-          foto.path,
-          filename: 'absensi_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        ),
-      );
-
-      print('📤 Mengirim request dengan foto...');
-      print('📍 Lokasi ID: $lokasiIdInt');
-      print('📍 Koordinat: $titikKoordinatKamu');
-      print('📸 Foto: ${foto.path}');
-
-      // Kirim request
-      var streamedResponse = await request.send().timeout(
-        const Duration(seconds: 15),
-      );
-      var response = await http.Response.fromStream(streamedResponse);
-
-      print('📨 Response status: ${response.statusCode}');
-      print('📨 Response body: ${response.body}');
-
-      // Handle response
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        print('✅ Absensi dengan foto berhasil!');
-
-        Get.snackbar(
-          'Berhasil',
-          'Absensi di $lokasiNama berhasil dengan foto',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          duration: const Duration(seconds: 3),
-        );
-
-        return true;
-      } else {
-        try {
-          final errorData = jsonDecode(response.body);
-          String errorMsg = errorData['message'] ?? 'Gagal absen';
-          Get.snackbar(
-            'Gagal',
-            errorMsg,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.TOP,
-          );
-        } catch (e) {
-          Get.snackbar(
-            'Gagal',
-            'Error ${response.statusCode}',
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.TOP,
-          );
-        }
-        return false;
+      if (photo == null) {
+        return null;
       }
+
+      File imageFile = File(photo.path);
+      bool isFaceValid = await _detectFace(imageFile);
+
+      if (!isFaceValid) {
+        bool retry = await _showRetryDialog();
+        if (retry) {
+          return await takePhotoWithFaceDetection();
+        } else {
+          return null;
+        }
+      }
+
+      fotoWajah.value = imageFile;
+      return fotoWajah.value;
     } catch (e) {
-      print('❌ Exception: $e');
-      return false;
+      print('❌ Error take photo: $e');
+      return null;
+    } finally {
+      isTakingPhoto.value = false;
     }
   }
 
-  // Fungsi untuk menghitung jarak antara dua titik koordinat (dalam meter)
-  double _hitungJarakDalamMeter(LatLng titik1, LatLng titik2) {
-    const double R = 6371; // Radius bumi dalam km
-
-    double lat1 = titik1.latitude * pi / 180;
-    double lat2 = titik2.latitude * pi / 180;
-    double deltaLat = (titik2.latitude - titik1.latitude) * pi / 180;
-    double deltaLng = (titik2.longitude - titik1.longitude) * pi / 180;
-
-    double a =
-        sin(deltaLat / 2) * sin(deltaLat / 2) +
-        cos(lat1) * cos(lat2) * sin(deltaLng / 2) * sin(deltaLng / 2);
-
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    double distanceKm = R * c;
-
-    return distanceKm * 1000; // Kembalikan dalam meter
-  }
-
-  // ================= DIALOG KONFIRMASI LOKASI =================
-  Future<bool> _showLocationConfirmDialog() async {
-    Completer<bool> completer = Completer<bool>();
+  // ================= DIALOG FOTO ULANG =================
+  Future<bool> _showRetryDialog() async {
+    Completer<bool> completer = Completer();
 
     Get.dialog(
       AlertDialog(
-        title: const Text('Konfirmasi Lokasi'),
+        title: const Text('Foto Tidak Valid'),
         content: const Text(
-          'Aplikasi akan mengakses lokasi Anda saat ini untuk verifikasi jarak dengan lokasi absensi. Lanjutkan?',
+          'Foto tidak mengandung wajah yang jelas. Foto ulang?',
         ),
         actions: [
           TextButton(
@@ -655,17 +287,293 @@ class UserLokasiController extends GetxController {
               Get.back();
               completer.complete(true);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Lanjutkan'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            child: const Text('Foto Ulang'),
           ),
         ],
       ),
     );
 
     return completer.future;
+  }
+
+  // ================= AMBIL LOKASI REAL-TIME =================
+  Future<String> getCurrentLocation() async {
+    isGettingLocation.value = true;
+
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          Get.snackbar(
+            'Izin Ditolak',
+            'Izin lokasi diperlukan',
+            backgroundColor: Colors.orange,
+          );
+          return '';
+        }
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      String koordinat = '${position.latitude}, ${position.longitude}';
+      lokasiSaatIni.value = koordinat;
+      return koordinat;
+    } catch (e) {
+      print('❌ Error getCurrentLocation: $e');
+      return '';
+    } finally {
+      isGettingLocation.value = false;
+    }
+  }
+
+  // ================= SUBMIT ABSENSI MASUK =================
+  Future<bool> submitAbsensiMasuk(
+    String lokasiId,
+    String lokasiNama,
+    String koordinatLokasi,
+  ) async {
+    return _submitAbsensi(lokasiId, lokasiNama, koordinatLokasi, 'masuk');
+  }
+
+  // ================= SUBMIT ABSENSI PULANG =================
+  Future<bool> submitAbsensiPulang(
+    String lokasiId,
+    String lokasiNama,
+    String koordinatLokasi,
+  ) async {
+    return _submitAbsensi(lokasiId, lokasiNama, koordinatLokasi, 'pulang');
+  }
+
+  // ================= SUBMIT ABSENSI (GENERAL) =================
+  Future<bool> _submitAbsensi(
+    String lokasiId,
+    String lokasiNama,
+    String koordinatLokasi,
+    String tipe,
+  ) async {
+    isLoading.value = true;
+
+    try {
+      print('🔥 SUBMIT ABSENSI $tipe - $lokasiNama');
+
+      if (auth.token.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'Token tidak ditemukan',
+          backgroundColor: Colors.red,
+        );
+        return false;
+      }
+
+      // Validasi apakah sudah absen untuk tipe ini
+      if (tipe == 'masuk' && sudahMasuk.value) {
+        Get.snackbar(
+          'Info',
+          'Anda sudah absen masuk hari ini',
+          backgroundColor: Colors.orange,
+        );
+        return false;
+      }
+      if (tipe == 'pulang' && sudahPulang.value) {
+        Get.snackbar(
+          'Info',
+          'Anda sudah absen pulang hari ini',
+          backgroundColor: Colors.orange,
+        );
+        return false;
+      }
+
+      final lokasiIdInt = int.tryParse(lokasiId);
+      if (lokasiIdInt == null) {
+        Get.snackbar(
+          'Error',
+          'ID Lokasi tidak valid',
+          backgroundColor: Colors.red,
+        );
+        return false;
+      }
+
+      // Ambil lokasi real-time
+      String titikKoordinatKamu = await getCurrentLocation();
+      if (titikKoordinatKamu.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'Gagal mendapatkan lokasi Anda',
+          backgroundColor: Colors.red,
+        );
+        return false;
+      }
+
+      // Validasi jarak
+      bool jarakValid = await _validasiJarak(
+        koordinatLokasi,
+        titikKoordinatKamu,
+      );
+      if (!jarakValid) return false;
+
+      // Ambil foto
+      File? foto = await takePhotoWithFaceDetection();
+      if (foto == null) {
+        Get.snackbar(
+          'Info',
+          'Absen dibatalkan',
+          backgroundColor: Colors.orange,
+        );
+        return false;
+      }
+
+      // Kirim ke server
+      return await _submitWithPhoto(
+        lokasiIdInt,
+        lokasiNama,
+        titikKoordinatKamu,
+        foto,
+        tipe,
+      );
+    } catch (e) {
+      print('❌ Exception: $e');
+      return false;
+    } finally {
+      isLoading.value = false;
+      cekStatusHariIni(); // Refresh status
+    }
+  }
+
+  // ================= VALIDASI JARAK =================
+  Future<bool> _validasiJarak(
+    String koordinatLokasi,
+    String titikKoordinatKamu,
+  ) async {
+    try {
+      // Parse koordinat lokasi
+      final lokasiParts = koordinatLokasi.split(',');
+      final kamuParts = titikKoordinatKamu.split(',');
+
+      if (lokasiParts.length != 2 || kamuParts.length != 2) return false;
+
+      final lokasiLat = double.tryParse(lokasiParts[0].trim());
+      final lokasiLng = double.tryParse(lokasiParts[1].trim());
+      final kamuLat = double.tryParse(kamuParts[0].trim());
+      final kamuLng = double.tryParse(kamuParts[1].trim());
+
+      if (lokasiLat == null ||
+          lokasiLng == null ||
+          kamuLat == null ||
+          kamuLng == null) {
+        return false;
+      }
+
+      final lokasiLatLng = LatLng(lokasiLat, lokasiLng);
+      final kamuLatLng = LatLng(kamuLat, kamuLng);
+
+      double jarakMeter = _hitungJarakDalamMeter(lokasiLatLng, kamuLatLng);
+      print('📏 Jarak: ${jarakMeter.toStringAsFixed(2)} meter');
+
+      const double batasMaksimal = 100.0;
+
+      if (jarakMeter > batasMaksimal) {
+        await _showJarakTerlaluJauhDialog(jarakMeter, batasMaksimal);
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      print('Error validasi jarak: $e');
+      return false;
+    }
+  }
+
+  // ================= HITUNG JARAK =================
+  double _hitungJarakDalamMeter(LatLng titik1, LatLng titik2) {
+    const double R = 6371;
+
+    double lat1 = titik1.latitude * pi / 180;
+    double lat2 = titik2.latitude * pi / 180;
+    double deltaLat = (titik2.latitude - titik1.latitude) * pi / 180;
+    double deltaLng = (titik2.longitude - titik1.longitude) * pi / 180;
+
+    double a =
+        sin(deltaLat / 2) * sin(deltaLat / 2) +
+        cos(lat1) * cos(lat2) * sin(deltaLng / 2) * sin(deltaLng / 2);
+
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double distanceKm = R * c;
+
+    return distanceKm * 1000;
+  }
+
+  // ================= KIRIM DENGAN FOTO =================
+  Future<bool> _submitWithPhoto(
+    int lokasiIdInt,
+    String lokasiNama,
+    String titikKoordinatKamu,
+    File foto,
+    String tipe,
+  ) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/user/absensi/$tipe'),
+      );
+
+      request.headers.addAll({
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${auth.token}',
+      });
+
+      request.fields['lokasi_id'] = lokasiIdInt.toString();
+      request.fields['titik_koordinat_kamu'] = titikKoordinatKamu;
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'foto_wajah',
+          foto.path,
+          filename: '${tipe}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
+      );
+
+      print('📤 Mengirim request $tipe...');
+      var streamedResponse = await request.send().timeout(
+        const Duration(seconds: 15),
+      );
+      var response = await http.Response.fromStream(streamedResponse);
+
+      print('📨 Response status: ${response.statusCode}');
+      print('📨 Response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Get.snackbar(
+          'Berhasil',
+          'Absen $tipe di $lokasiNama berhasil',
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.TOP,
+        );
+        return true;
+      } else {
+        try {
+          final errorData = jsonDecode(response.body);
+          Get.snackbar(
+            'Gagal',
+            errorData['message'] ?? 'Gagal absen',
+            backgroundColor: Colors.red,
+          );
+        } catch (e) {
+          Get.snackbar(
+            'Gagal',
+            'Error ${response.statusCode}',
+            backgroundColor: Colors.red,
+          );
+        }
+        return false;
+      }
+    } catch (e) {
+      print('❌ Exception: $e');
+      return false;
+    }
   }
 
   // ================= DIALOG JARAK TERLALU JAUH =================
@@ -693,37 +601,20 @@ class UserLokasiController extends GetxController {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              'Jarak antara lokasi absensi dan posisi Anda adalah $jarakFormat',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text('Jarak Anda $jarakFormat', textAlign: TextAlign.center),
             const SizedBox(height: 8),
             Text(
-              'Batas maksimal yang diizinkan adalah ${batas.toStringAsFixed(0)} meter',
-              style: const TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
+              'Batas maksimal ${batas.toStringAsFixed(0)} meter',
+              style: const TextStyle(color: Colors.red),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Anda tidak dapat melakukan absensi karena berada terlalu jauh dari lokasi yang ditentukan.',
-              textAlign: TextAlign.center,
-            ),
+            const Text('Anda tidak dapat melakukan absensi.'),
           ],
         ),
         actions: [
           ElevatedButton(
-            onPressed: () {
-              Get.back(); // Tutup dialog
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 40),
-            ),
+            onPressed: () => Get.back(),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('MENGERTI'),
           ),
         ],
@@ -733,10 +624,7 @@ class UserLokasiController extends GetxController {
 
   // ================= AMBIL RIWAYAT ABSENSI =================
   Future<void> fetchRiwayatAbsensi() async {
-    if (auth.token.isEmpty) {
-      print('❌ Token kosong');
-      return;
-    }
+    if (auth.token.isEmpty) return;
 
     isLoadingRiwayat.value = true;
 
@@ -753,11 +641,8 @@ class UserLokasiController extends GetxController {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('📨 Response: ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         if (data is List) {
           riwayatAbsensi.value = List<Map<String, dynamic>>.from(data);
           print('✅ Riwayat: ${riwayatAbsensi.length} data');
@@ -772,29 +657,6 @@ class UserLokasiController extends GetxController {
     }
   }
 
-  // ================= CEK STATUS HARI INI =================
-  Future<Map<String, dynamic>> cekStatusHariIni() async {
-    try {
-      final response = await http
-          .get(
-            Uri.parse('$baseUrl/user/absensi/cek-hari-ini'),
-            headers: {
-              'Accept': 'application/json',
-              'Authorization': 'Bearer ${auth.token}',
-            },
-          )
-          .timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-    } catch (e) {
-      print('❌ Error cek status: $e');
-    }
-
-    return {'sudah_absen': false};
-  }
-
   // ================= RESET =================
   void reset() {
     userLokasis.clear();
@@ -804,6 +666,10 @@ class UserLokasiController extends GetxController {
     isLoadingRiwayat.value = false;
     lokasiSaatIni.value = '';
     fotoWajah.value = null;
+    sudahMasuk.value = false;
+    sudahPulang.value = false;
+    dataMasuk.value = null;
+    dataPulang.value = null;
   }
 
   // ================= DEBUG =================
@@ -814,8 +680,9 @@ class UserLokasiController extends GetxController {
     print('Role: ${auth.user['role']}');
     print('Lokasi: ${userLokasis.length}');
     print('Riwayat: ${riwayatAbsensi.length}');
+    print('Status Masuk: $sudahMasuk');
+    print('Status Pulang: $sudahPulang');
     print('Lokasi Saat Ini: ${lokasiSaatIni.value}');
-    print('Foto tersedia: ${fotoWajah.value != null}');
     print('Loading: $isLoading');
     print('=' * 50);
   }
