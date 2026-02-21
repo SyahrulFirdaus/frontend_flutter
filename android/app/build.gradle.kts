@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.frontend_flutter"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36  // Naikkan dari 34 ke 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -24,8 +24,11 @@ android {
         applicationId = "com.example.frontend_flutter"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        
+        // PENTING: Set minSdk ke 21 untuk mendukung Google ML Kit (face detection)
+        minSdk = flutter.minSdkVersion  // Tetap 21
+        
+        targetSdk = 36  // Naikkan dari 34 ke 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

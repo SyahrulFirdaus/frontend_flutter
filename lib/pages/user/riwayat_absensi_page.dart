@@ -8,6 +8,10 @@ import '../../controllers/user_lokasi_controller.dart';
 class RiwayatAbsensiPage extends StatelessWidget {
   const RiwayatAbsensiPage({super.key});
 
+  // IP komputer Anda (sudah benar)
+  // static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String baseUrl = 'http://192.168.1.9:8000';
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<UserLokasiController>();
@@ -125,6 +129,7 @@ class RiwayatAbsensiPage extends StatelessWidget {
             String waktu = '-';
             String titikKoordinatLokasi = '-';
             String titikKoordinatKamu = '-';
+            String fotoWajah = '';
 
             try {
               // Handle lokasi
@@ -142,10 +147,16 @@ class RiwayatAbsensiPage extends StatelessWidget {
                     .toString();
               }
 
-              // Handle titik_koordinat_kamu (field baru)
+              // Handle titik_koordinat_kamu
               if (item['titik_koordinat_kamu'] != null &&
                   item['titik_koordinat_kamu'].toString().isNotEmpty) {
                 titikKoordinatKamu = item['titik_koordinat_kamu'].toString();
+              }
+
+              // Handle foto_wajah
+              if (item['foto_wajah'] != null &&
+                  item['foto_wajah'].toString().isNotEmpty) {
+                fotoWajah = item['foto_wajah'].toString();
               }
 
               // Handle waktu_absen
@@ -251,11 +262,10 @@ class RiwayatAbsensiPage extends StatelessWidget {
                               ],
                             ),
 
-                            // Indikator lokasi real-time
-                            if (titikKoordinatKamu != '-') ...[
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
+                            // Indikator lokasi real-time dan foto
+                            Row(
+                              children: [
+                                if (titikKoordinatKamu != '-') ...[
                                   Icon(
                                     Icons.my_location,
                                     size: 12,
@@ -263,16 +273,43 @@ class RiwayatAbsensiPage extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Lokasi real-time tersedia',
+                                    'Lokasi',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: Colors.green.shade600,
-                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
                                 ],
-                              ),
-                            ],
+                                if (titikKoordinatKamu != '-' &&
+                                    fotoWajah.isNotEmpty) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 4,
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade400,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                if (fotoWajah.isNotEmpty) ...[
+                                  Icon(
+                                    Icons.camera_alt,
+                                    size: 12,
+                                    color: Colors.blue.shade600,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Foto',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.blue.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -306,6 +343,38 @@ class RiwayatAbsensiPage extends StatelessWidget {
         child: const Icon(Icons.refresh, color: Colors.white),
       ),
     );
+  }
+
+  // Fungsi untuk mendapatkan URL foto lengkap (DIPERBAIKI)
+  String _getFullImageUrl(String path) {
+    if (path.isEmpty) return '';
+
+    print('🔧 Memproses path: $path');
+
+    // Jika path sudah dimulai dengan http
+    if (path.startsWith('http')) {
+      // CEK: apakah masih menggunakan localhost?
+      if (path.contains('localhost')) {
+        // Ganti localhost dengan IP komputer
+        String fixedUrl = path.replaceFirst('localhost', '192.168.1.9:8000');
+        print('✅ Localhost diganti dengan IP: $fixedUrl');
+        return fixedUrl;
+      }
+      print('✅ Path sudah lengkap: $path');
+      return path;
+    }
+
+    // Jika path dimulai dengan /storage, tambahkan baseUrl
+    if (path.startsWith('/storage')) {
+      String fullUrl = baseUrl + path;
+      print('✅ Path dengan baseUrl: $fullUrl');
+      return fullUrl;
+    }
+
+    // Jika path hanya nama file, asumsikan di folder foto_absensi
+    String fullUrl = baseUrl + '/storage/foto_absensi/' + path;
+    print('✅ Path dari nama file: $fullUrl');
+    return fullUrl;
   }
 
   // Fungsi untuk memformat waktu dari berbagai format
@@ -407,6 +476,7 @@ class RiwayatAbsensiPage extends StatelessWidget {
     String koordinatLokasi = '-';
     String koordinatKamu = '-';
     String waktu = '-';
+    String fotoWajah = '';
     LatLng? lokasiLatLng;
     LatLng? kamuLatLng;
     String jarak = '';
@@ -437,7 +507,7 @@ class RiwayatAbsensiPage extends StatelessWidget {
         }
       }
 
-      // Parse titik_koordinat_kamu - TAMPILKAN LENGKAP
+      // Parse titik_koordinat_kamu
       if (item['titik_koordinat_kamu'] != null &&
           item['titik_koordinat_kamu'].toString().isNotEmpty) {
         koordinatKamu = item['titik_koordinat_kamu'].toString();
@@ -455,6 +525,17 @@ class RiwayatAbsensiPage extends StatelessWidget {
             print('Error parsing koordinat kamu: $e');
           }
         }
+      }
+
+      // Ambil foto_wajah
+      if (item['foto_wajah'] != null &&
+          item['foto_wajah'].toString().isNotEmpty) {
+        fotoWajah = item['foto_wajah'].toString();
+        print('=' * 50);
+        print('📸 DEBUG FOTO:');
+        print('📸 Path dari database: $fotoWajah');
+        print('📸 Full URL yang akan diakses: ${_getFullImageUrl(fotoWajah)}');
+        print('=' * 50);
       }
 
       // Hitung jarak jika kedua koordinat tersedia
@@ -540,7 +621,7 @@ class RiwayatAbsensiPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Titik Koordinat Lokasi (LENGKAP)
+                // Titik Koordinat Lokasi
                 _buildDetailItem(
                   icon: Icons.pin_drop,
                   label: 'Titik Koordinat Lokasi',
@@ -596,7 +677,7 @@ class RiwayatAbsensiPage extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
 
-                // Titik Koordinat Kamu (LENGKAP - TIDAK DIPOTONG)
+                // Titik Koordinat Kamu
                 _buildDetailItem(
                   icon: Icons.my_location,
                   label: 'Titik Koordinat Kamu',
@@ -657,7 +738,7 @@ class RiwayatAbsensiPage extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
 
-                // Informasi Jarak (TAMBAHAN BARU)
+                // Informasi Jarak
                 if (jarak.isNotEmpty) ...[
                   Container(
                     width: double.infinity,
@@ -726,6 +807,139 @@ class RiwayatAbsensiPage extends StatelessWidget {
                   ],
                 ),
 
+                const SizedBox(height: 16),
+
+                // FOTO WAJAH - TAMPIL DI BAGIAN PALING BAWAH
+                if (fotoWajah.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.camera_alt,
+                              color: Colors.blue.shade700,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Foto Bukti Absensi',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Tampilkan gambar dari URL dengan base URL
+                        Container(
+                          height: 200,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              _getFullImageUrl(fotoWajah),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                print('❌ Error loading image: $error');
+                                print(
+                                  '📸 URL yang gagal: ${_getFullImageUrl(fotoWajah)}',
+                                );
+                                return Container(
+                                  color: Colors.grey.shade200,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.broken_image,
+                                        size: 50,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Gagal memuat foto',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'URL: ${_getFullImageUrl(fotoWajah)}',
+                                        style: TextStyle(
+                                          fontSize: 8,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: Colors.grey.shade100,
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const CircularProgressIndicator(),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Memuat foto... ${loadingProgress.cumulativeBytesLoaded ~/ 1024}KB / ${loadingProgress.expectedTotalBytes != null ? '${loadingProgress.expectedTotalBytes! ~/ 1024}KB' : '...'}',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Tampilkan URL lengkap untuk debugging
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: SelectableText(
+                            _getFullImageUrl(fotoWajah),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 const SizedBox(height: 20),
 
                 // Tombol OK
@@ -742,7 +956,7 @@ class RiwayatAbsensiPage extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      'OK',
+                      'Tutup',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

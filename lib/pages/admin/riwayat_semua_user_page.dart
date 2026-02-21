@@ -9,6 +9,9 @@ import '../../controllers/auth_controller.dart';
 class RiwayatSemuaUserPage extends StatelessWidget {
   const RiwayatSemuaUserPage({super.key});
 
+  // Base URL Laravel (sesuaikan dengan IP komputer Anda)
+  static const String baseUrl = 'http://192.168.1.9:8000';
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(AdminAbsensiController());
@@ -17,7 +20,7 @@ class RiwayatSemuaUserPage extends StatelessWidget {
     // Panggil data saat halaman dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.fetchAllUsers();
-      controller.fetchAllAbsensi(); // Langsung ambil semua data
+      controller.fetchAllAbsensi();
     });
 
     return Scaffold(
@@ -34,7 +37,7 @@ class RiwayatSemuaUserPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              controller.resetFilter(); // Reset filter
+              controller.resetFilter();
               controller.fetchAllUsers();
               controller.fetchAllAbsensi();
             },
@@ -76,6 +79,42 @@ class RiwayatSemuaUserPage extends StatelessWidget {
         );
       }),
     );
+  }
+
+  // ================= FUNGSI UNTUK MENDAPATKAN URL FOTO LENGKAP =================
+  String _getFullImageUrl(String path) {
+    if (path.isEmpty) return '';
+
+    print('🔧 Admin - Memproses path foto: $path');
+
+    String result = '';
+
+    // Kasus 1: Path sudah lengkap dengan http
+    if (path.startsWith('http')) {
+      result = path;
+    }
+    // Kasus 2: Path dimulai dengan /storage
+    else if (path.startsWith('/storage')) {
+      result = baseUrl + path;
+      print('✅ Admin - Path dengan baseUrl: $result');
+    }
+    // Kasus 3: Path hanya nama file
+    else {
+      result = baseUrl + '/storage/foto_absensi/' + path;
+      print('✅ Admin - Path dari nama file: $result');
+    }
+
+    // PERBAIKAN: Pastikan port 8000 selalu ada
+    if (result.contains('192.168.1.9') && !result.contains(':8000')) {
+      result = result.replaceFirst('192.168.1.9', '192.168.1.9:8000');
+    }
+
+    // Jika masih ada localhost, ganti dengan IP+port
+    if (result.contains('localhost')) {
+      result = result.replaceFirst('localhost', '192.168.1.9:8000');
+    }
+
+    return result;
   }
 
   Widget _buildFilterSection(AdminAbsensiController controller) {
@@ -263,6 +302,13 @@ class RiwayatSemuaUserPage extends StatelessWidget {
           }
         }
 
+        // Cek apakah ada foto
+        String fotoWajah = '';
+        if (item['foto_wajah'] != null &&
+            item['foto_wajah'].toString().isNotEmpty) {
+          fotoWajah = item['foto_wajah'].toString();
+        }
+
         // Format waktu
         String waktu = controller.formatWaktu(
           item['waktu_absen']?.toString() ?? '',
@@ -328,6 +374,27 @@ class RiwayatSemuaUserPage extends StatelessWidget {
                             color: Colors.grey.shade600,
                           ),
                         ),
+                        // Indikator foto jika ada
+                        if (fotoWajah.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.camera_alt,
+                                size: 12,
+                                color: Colors.blue.shade600,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Dengan Foto',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.blue.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -364,6 +431,7 @@ class RiwayatSemuaUserPage extends StatelessWidget {
     String koordinatLokasi = '-';
     String koordinatKamu = '-';
     String waktu = '-';
+    String fotoWajah = '';
     LatLng? lokasiLatLng;
     LatLng? kamuLatLng;
 
@@ -417,6 +485,13 @@ class RiwayatSemuaUserPage extends StatelessWidget {
         } catch (e) {
           print('Error parsing koordinat kamu: $e');
         }
+      }
+
+      // Handle foto_wajah
+      if (item['foto_wajah'] != null &&
+          item['foto_wajah'].toString().isNotEmpty) {
+        fotoWajah = item['foto_wajah'].toString();
+        print('📸 Admin - Foto: ${_getFullImageUrl(fotoWajah)}');
       }
 
       if (item['waktu_absen'] != null) {
@@ -569,7 +644,7 @@ class RiwayatSemuaUserPage extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
 
-                // Titik Koordinat Kamu
+                // Titik Koordinat User
                 _buildDetailItem(
                   icon: Icons.my_location,
                   label: 'Titik Koordinat User',
@@ -660,6 +735,109 @@ class RiwayatSemuaUserPage extends StatelessWidget {
                     ],
                   ),
                 ),
+
+                const SizedBox(height: 16),
+
+                // FOTO WAJAH - TAMPIL DI BAGIAN BAWAH
+                if (fotoWajah.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.camera_alt,
+                              color: Colors.blue.shade700,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Foto Bukti Absensi',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Tampilkan gambar
+                        Container(
+                          height: 200,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              _getFullImageUrl(fotoWajah),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                print('❌ Error loading image: $error');
+                                return Container(
+                                  color: Colors.grey.shade200,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.broken_image,
+                                        size: 50,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Gagal memuat foto',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: Colors.grey.shade100,
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const CircularProgressIndicator(),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Memuat foto...',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 const SizedBox(height: 20),
 
