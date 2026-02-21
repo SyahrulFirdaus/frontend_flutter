@@ -10,8 +10,6 @@ import 'auth_controller.dart';
 class AdminAbsensiController extends GetxController {
   final auth = Get.find<AuthController>();
 
-  // final String baseUrl = 'http://10.0.2.2:8000/api';
-  // final String baseUrl = 'http://192.168.1.9:8000/api';
   final String baseUrl = 'http://192.168.1.10:8000/api';
 
   var semuaAbsensi = <Map<String, dynamic>>[].obs;
@@ -39,7 +37,7 @@ class AdminAbsensiController extends GetxController {
     isLoadingUsers.value = true;
 
     try {
-      print('📌 Fetching all users from: $baseUrl/admin/users/all');
+      print('📌 Fetching all users...');
 
       final response = await http
           .get(
@@ -51,26 +49,15 @@ class AdminAbsensiController extends GetxController {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('📨 Response users status: ${response.statusCode}');
-      print('📨 Response users body: ${response.body}');
+      print('📨 Response users: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] is List) {
+        if (data['data'] is List) {
           semuaUsers.value = List<Map<String, dynamic>>.from(data['data']);
-          print('✅ Users ditemukan: ${semuaUsers.length} data');
-
-          if (semuaUsers.isEmpty) {
-            print('⚠️ Tidak ada user dengan role "user" di database');
-          } else {
-            print('📋 Daftar user:');
-            for (var user in semuaUsers) {
-              print('   - ${user['id']}: ${user['name']}');
-            }
-          }
+          print('✅ Users: ${semuaUsers.length} data');
         } else {
           semuaUsers.value = [];
-          print('❌ Format response tidak sesuai: ${data}');
         }
       } else if (response.statusCode == 401) {
         errorMessage.value = 'Sesi habis, silahkan login ulang';
@@ -83,7 +70,7 @@ class AdminAbsensiController extends GetxController {
         );
         Future.delayed(const Duration(seconds: 2), () => auth.logout());
       } else {
-        print('❌ Error fetch users: ${response.statusCode} - ${response.body}');
+        print('❌ Error fetch users: ${response.statusCode}');
         errorMessage.value = 'Gagal memuat data users';
       }
     } catch (e) {
@@ -126,17 +113,16 @@ class AdminAbsensiController extends GetxController {
           )
           .timeout(const Duration(seconds: 15));
 
-      print('📨 Response absensi status: ${response.statusCode}');
-      print('📨 Response absensi body: ${response.body}');
+      print('📨 Response absensi: ${response.statusCode}');
+      print('📨 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] is List) {
+        if (data['data'] is List) {
           semuaAbsensi.value = List<Map<String, dynamic>>.from(data['data']);
-          print('✅ Absensi ditemukan: ${semuaAbsensi.length} data');
+          print('✅ Absensi: ${semuaAbsensi.length} data');
         } else {
           semuaAbsensi.value = [];
-          print('❌ Format response tidak sesuai: ${data}');
         }
       } else if (response.statusCode == 401) {
         errorMessage.value = 'Sesi habis, silahkan login ulang';
@@ -150,15 +136,89 @@ class AdminAbsensiController extends GetxController {
         Future.delayed(const Duration(seconds: 2), () => auth.logout());
       } else {
         errorMessage.value = 'Error ${response.statusCode}';
-        print(
-          '❌ Error fetch absensi: ${response.statusCode} - ${response.body}',
-        );
+        print('❌ Error fetch absensi: ${response.statusCode}');
       }
     } catch (e) {
       print('❌ Error fetch absensi: $e');
       errorMessage.value = 'Gagal memuat data absensi';
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // ================= DELETE ABSENSI =================
+  Future<bool> deleteAbsensi(int id) async {
+    if (auth.token.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Token tidak ditemukan',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return false;
+    }
+
+    try {
+      print('📌 Deleting absensi ID: $id');
+
+      final response = await http
+          .delete(
+            Uri.parse('$baseUrl/admin/absensi/$id'),
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer ${auth.token}',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+
+      print('📨 Response delete: ${response.statusCode}');
+      print('📨 Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        print('✅ Absensi berhasil dihapus');
+        return true;
+      } else if (response.statusCode == 401) {
+        Get.snackbar(
+          'Sesi Habis',
+          'Silahkan login ulang',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+        );
+        Future.delayed(const Duration(seconds: 2), () => auth.logout());
+        return false;
+      } else {
+        try {
+          final errorData = jsonDecode(response.body);
+          Get.snackbar(
+            'Gagal',
+            errorData['message'] ?? 'Gagal menghapus absensi',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.TOP,
+          );
+        } catch (e) {
+          Get.snackbar(
+            'Gagal',
+            'Error ${response.statusCode}',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.TOP,
+          );
+        }
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error delete absensi: $e');
+      Get.snackbar(
+        'Error',
+        'Koneksi error: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return false;
     }
   }
 
@@ -193,23 +253,19 @@ class AdminAbsensiController extends GetxController {
     try {
       if (waktuStr.isEmpty) return '-';
 
-      // Handle format ISO: "2026-02-20T03:22:00.000Z"
       if (waktuStr.contains('T')) {
         final parts = waktuStr.split('T');
         String tanggal = parts[0];
 
-        // Format tanggal: YYYY-MM-DD → DD-MM-YYYY
         final tglParts = tanggal.split('-');
         if (tglParts.length == 3) {
           tanggal = '${tglParts[2]}-${tglParts[1]}-${tglParts[0]}';
         }
 
         String jam = parts[1];
-        // Hapus bagian .000Z atau zona waktu lainnya
         jam = jam.replaceAll(RegExp(r'\..*$'), '');
         jam = jam.replaceAll(RegExp(r'Z$'), '');
 
-        // Ambil hanya jam dan menit (HH:MM)
         if (jam.contains(':')) {
           final jamParts = jam.split(':');
           if (jamParts.length >= 2) {
@@ -220,19 +276,16 @@ class AdminAbsensiController extends GetxController {
         return '$tanggal $jam';
       }
 
-      // Handle format dengan spasi: "2026-02-20 03:22:00"
       if (waktuStr.contains(' ')) {
         final parts = waktuStr.split(' ');
         if (parts.length >= 2) {
           String tanggal = parts[0];
-          // Format tanggal: YYYY-MM-DD → DD-MM-YYYY
           final tglParts = tanggal.split('-');
           if (tglParts.length == 3) {
             tanggal = '${tglParts[2]}-${tglParts[1]}-${tglParts[0]}';
           }
 
           String jam = parts[1];
-          // Ambil hanya jam dan menit (HH:MM)
           if (jam.contains(':')) {
             final jamParts = jam.split(':');
             if (jamParts.length >= 2) {

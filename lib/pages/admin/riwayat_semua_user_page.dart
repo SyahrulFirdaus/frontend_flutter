@@ -10,8 +10,6 @@ class RiwayatSemuaUserPage extends StatelessWidget {
   const RiwayatSemuaUserPage({super.key});
 
   // Base URL Laravel (sesuaikan dengan IP komputer Anda)
-  // static const String baseUrl = 'http://10.0.2.2:8000';
-  // static const String baseUrl = 'http://192.168.1.9:8000';
   static const String baseUrl = 'http://192.168.1.10:8000';
 
   @override
@@ -102,21 +100,6 @@ class RiwayatSemuaUserPage extends StatelessWidget {
     if (result.contains('localhost')) {
       result = result.replaceFirst('localhost', '192.168.1.10:8000');
     }
-    // if (result.contains('192.168.1.9') && !result.contains(':8000')) {
-    //   result = result.replaceFirst('192.168.1.9', '192.168.1.9:8000');
-    // }
-
-    // if (result.contains('localhost')) {
-    //   result = result.replaceFirst('localhost', '192.168.1.9:8000');
-    // }
-
-    // if (result.contains('10.0.2.2') && !result.contains(':8000')) {
-    //   result = result.replaceFirst('10.0.2.2', '10.0.2.2:8000');
-    // }
-
-    // if (result.contains('localhost')) {
-    //   result = result.replaceFirst('localhost', '10.0.2.2:8000');
-    // }
 
     return result;
   }
@@ -258,7 +241,7 @@ class RiwayatSemuaUserPage extends StatelessWidget {
     );
   }
 
-  // Group data by user and date - DENGAN PARAMETER CONTROLLER
+  // Group data by user and date
   Map<String, Map<String, List<Map<String, dynamic>>>> _groupByUserAndDate(
     List<Map<String, dynamic>> data,
     AdminAbsensiController controller,
@@ -369,6 +352,11 @@ class RiwayatSemuaUserPage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const Spacer(),
+                  Text(
+                    '${dates.length} hari',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
                 ],
               ),
             ),
@@ -396,6 +384,10 @@ class RiwayatSemuaUserPage extends StatelessWidget {
               } catch (e) {
                 dataPulang = null;
               }
+
+              // Ambil ID absensi untuk keperluan hapus
+              int? idMasuk = dataMasuk?['id'];
+              int? idPulang = dataPulang?['id'];
 
               // Ambil lokasi dari item pertama
               String lokasi = '';
@@ -459,23 +451,35 @@ class RiwayatSemuaUserPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Tanggal dan Lokasi
-                              Text(
-                                _formatTanggal(tanggal),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                lokasi,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey.shade700,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              Row(
+                                children: [
+                                  Text(
+                                    _formatTanggal(tanggal),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      lokasi,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 8),
 
@@ -567,33 +571,85 @@ class RiwayatSemuaUserPage extends StatelessWidget {
                           ),
                         ),
 
-                        // Icon indikator
-                        if (dataMasuk != null && dataPulang != null)
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade50,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.check_circle,
-                              color: Colors.green.shade400,
-                              size: 18,
-                            ),
-                          )
-                        else if (dataMasuk != null)
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.access_time,
-                              color: Colors.blue.shade400,
-                              size: 18,
-                            ),
-                          ),
+                        // Tombol Hapus
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert, color: Colors.grey),
+                          onSelected: (value) {
+                            if (value == 'hapus_masuk' && idMasuk != null) {
+                              _showDeleteConfirmation(
+                                context,
+                                idMasuk,
+                                'masuk',
+                                controller,
+                              );
+                            } else if (value == 'hapus_pulang' &&
+                                idPulang != null) {
+                              _showDeleteConfirmation(
+                                context,
+                                idPulang,
+                                'pulang',
+                                controller,
+                              );
+                            } else if (value == 'hapus_semua' &&
+                                idMasuk != null &&
+                                idPulang != null) {
+                              _showDeleteConfirmation(
+                                context,
+                                idMasuk,
+                                'semua',
+                                controller,
+                                idPulang: idPulang,
+                              );
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            if (dataMasuk != null)
+                              const PopupMenuItem(
+                                value: 'hapus_masuk',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                      size: 18,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Hapus Absen Masuk'),
+                                  ],
+                                ),
+                              ),
+                            if (dataPulang != null)
+                              const PopupMenuItem(
+                                value: 'hapus_pulang',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                      size: 18,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Hapus Absen Pulang'),
+                                  ],
+                                ),
+                              ),
+                            if (dataMasuk != null && dataPulang != null)
+                              const PopupMenuItem(
+                                value: 'hapus_semua',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.delete_forever,
+                                      color: Colors.red,
+                                      size: 18,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Hapus Semua'),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -601,10 +657,82 @@ class RiwayatSemuaUserPage extends StatelessWidget {
               );
             }).toList(),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
           ],
         );
       },
+    );
+  }
+
+  // ================= FUNGSI HAPUS ABSENSI =================
+  void _showDeleteConfirmation(
+    BuildContext context,
+    int id,
+    String tipe,
+    AdminAbsensiController controller, {
+    int? idPulang,
+  }) {
+    String pesan = '';
+    String title = 'Konfirmasi Hapus';
+
+    if (tipe == 'masuk') {
+      pesan = 'Yakin ingin menghapus absen MASUK ini?';
+    } else if (tipe == 'pulang') {
+      pesan = 'Yakin ingin menghapus absen PULANG ini?';
+    } else if (tipe == 'semua') {
+      pesan = 'Yakin ingin menghapus SEMUA absensi (masuk & pulang) hari ini?';
+    }
+
+    Get.dialog(
+      AlertDialog(
+        title: Text(title),
+        content: Text(pesan),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
+          ElevatedButton(
+            onPressed: () async {
+              Get.back(); // Tutup dialog konfirmasi
+
+              bool success = false;
+              if (tipe == 'masuk') {
+                success = await controller.deleteAbsensi(id);
+              } else if (tipe == 'pulang') {
+                success = await controller.deleteAbsensi(id);
+              } else if (tipe == 'semua' && idPulang != null) {
+                // Hapus masuk dulu, lalu pulang
+                bool success1 = await controller.deleteAbsensi(id);
+                bool success2 = await controller.deleteAbsensi(idPulang);
+                success = success1 && success2;
+              }
+
+              if (success) {
+                Get.snackbar(
+                  'Sukses',
+                  'Data absensi berhasil dihapus',
+                  backgroundColor: Colors.green,
+                  colorText: Colors.white,
+                  snackPosition: SnackPosition.TOP,
+                  duration: const Duration(seconds: 2),
+                );
+                controller.fetchAllAbsensi(); // Refresh data
+              } else {
+                Get.snackbar(
+                  'Error',
+                  'Gagal menghapus data absensi',
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                  snackPosition: SnackPosition.TOP,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
     );
   }
 
