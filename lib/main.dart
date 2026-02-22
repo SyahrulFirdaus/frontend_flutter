@@ -7,8 +7,8 @@ import 'bindings/initial_binding.dart';
 import 'bindings/user_lokasi_binding.dart'; // Import UserLokasiBinding
 import 'pages/auth/login_page.dart';
 import 'pages/auth/register_page.dart';
-import 'pages/admin/list_akun.dart';
-import 'pages/user/user_page.dart';
+import 'pages/admin/listAkun/list_akun.dart';
+import 'pages/user/userPage/user_page.dart';
 import 'controllers/auth_controller.dart';
 
 void main() async {
