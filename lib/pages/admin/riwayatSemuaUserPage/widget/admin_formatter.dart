@@ -84,12 +84,20 @@ class AdminFormatter {
       result = baseUrl + '/storage/foto_absensi/' + path;
     }
 
-    if (result.contains('192.168.1.10') && !result.contains(':8000')) {
-      result = result.replaceFirst('192.168.1.10', '192.168.1.10:8000');
+    // if (result.contains('192.168.1.10') && !result.contains(':8000')) {
+    //   result = result.replaceFirst('192.168.1.10', '192.168.1.10:8000');
+    // }
+
+    // if (result.contains('localhost')) {
+    //   result = result.replaceFirst('localhost', '192.168.1.10:8000');
+    // }
+
+    if (result.contains('192.168.95.243') && !result.contains(':8000')) {
+      result = result.replaceFirst('192.168.95.243', '192.168.95.243:8000');
     }
 
     if (result.contains('localhost')) {
-      result = result.replaceFirst('localhost', '192.168.1.10:8000');
+      result = result.replaceFirst('localhost', '192.168.95.243:8000');
     }
 
     return result;

@@ -6,7 +6,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'admin_formatter.dart';
 
 class AdminDetailDialog {
-  static const String baseUrl = 'http://192.168.1.10:8000';
+  static const String baseUrl = 'http://192.168.95.243:8000';
+  // static const String baseUrl = 'http://10.0.2.2:8000/api';
 
   static void show({
     required BuildContext context,

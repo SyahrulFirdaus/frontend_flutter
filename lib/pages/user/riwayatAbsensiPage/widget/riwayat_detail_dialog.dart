@@ -1,6 +1,5 @@
 // lib/pages/user/widgets/riwayat/riwayat_detail_dialog.dart
 
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/pages/user/riwayatAbsensiPage/utils/riwayat_formatter.dart';
 import 'package:get/get.dart';
@@ -8,7 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 // Import formatter baru
 
 class RiwayatDetailDialog {
-  static const String baseUrl = 'http://192.168.1.10:8000';
+  static const String baseUrl = 'http://192.168.95.243:8000/api';
 
   static void show({
     required BuildContext context,

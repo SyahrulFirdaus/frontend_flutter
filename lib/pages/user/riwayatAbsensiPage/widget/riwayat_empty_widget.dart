@@ -1,8 +1,6 @@
 // lib/pages/user/widgets/riwayat/riwayat_empty_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../../../controllers/user_lokasi_controller.dart';
 
 class RiwayatEmptyWidget extends StatelessWidget {
   final VoidCallback onRefresh;

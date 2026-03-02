@@ -18,7 +18,7 @@ class UserLokasiController extends GetxController {
   // final String baseUrl = 'http://10.0.2.2:8000/api';
   // final String baseUrl =
   //     'http://192.168.1.9:8000/api'; // Sesuaikan dengan IP komputer Anda
-  final String baseUrl = 'http://192.168.1.10:8000/api';
+  final String baseUrl = 'http://192.168.95.243:8000/api';
 
   var userLokasis = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;

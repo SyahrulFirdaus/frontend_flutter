@@ -1,13 +1,15 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:frontend_flutter/bindings/pusat_lokasi_binding.dart';
+import 'package:frontend_flutter/pages/admin/pusatLokasi/pusat_lokasi_page.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-
 import 'bindings/initial_binding.dart';
-import 'bindings/user_lokasi_binding.dart'; // Import UserLokasiBinding
+import 'bindings/user_lokasi_binding.dart';
+import 'bindings/lokasi_binding.dart'; // <<< TAMBAHKAN IMPORT INI
 import 'pages/auth/login_page.dart';
 import 'pages/auth/register_page.dart';
 import 'pages/admin/listAkun/list_akun.dart';
+import 'pages/admin/lokasiPage/lokasi_page.dart'; // <<< TAMBAHKAN IMPORT INI
 import 'pages/user/userPage/user_page.dart';
 import 'controllers/auth_controller.dart';
 
@@ -31,10 +33,23 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/login', page: () => LoginPage()),
         GetPage(name: '/register', page: () => RegisterPage()),
         GetPage(name: '/admin', page: () => const ListAkunPage()),
+
+        // <<< TAMBAHKAN ROUTE UNTUK LOKASI USER >>>
+        GetPage(
+          name: '/admin/lokasi',
+          page: () => LokasiPage(),
+          binding: LokasiBinding(),
+        ),
+
         GetPage(
           name: '/user',
           page: () => const UserPage(),
-          binding: UserLokasiBinding(), // Gunakan UserLokasiBinding
+          binding: UserLokasiBinding(),
+        ),
+        GetPage(
+          name: '/admin/pusat-lokasi',
+          page: () => const PusatLokasiPage(),
+          binding: PusatLokasiBinding(),
         ),
       ],
     );

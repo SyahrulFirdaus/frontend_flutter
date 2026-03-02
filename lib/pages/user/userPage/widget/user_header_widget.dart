@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../controllers/auth_controller.dart';
 import '../../../../controllers/user_lokasi_controller.dart';
 
 class UserHeaderWidget extends StatelessWidget {

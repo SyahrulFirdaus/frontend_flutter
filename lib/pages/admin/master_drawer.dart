@@ -1,126 +1,7 @@
-// // lib/pages/admin/master_drawer.dart
-
-// import 'package:flutter/material.dart';
-// import 'package:frontend_flutter/controllers/auth_controller.dart';
-// import 'package:get/get.dart';
-// import 'listAkun/list_akun.dart';
-// import 'lokasiPage/lokasi_page.dart';
-// import 'riwayatSemuaUserPage/riwayat_semua_user_page.dart'; // Import halaman baru
-// import '../../bindings/lokasi_binding.dart';
-
-// class MasterDrawer extends StatelessWidget {
-//   final String currentPage;
-
-//   const MasterDrawer({super.key, required this.currentPage});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Drawer(
-//       child: ListView(
-//         padding: EdgeInsets.zero,
-//         children: [
-//           const DrawerHeader(
-//             decoration: BoxDecoration(color: Colors.blue),
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Text(
-//                   'Menu Admin',
-//                   style: TextStyle(
-//                     color: Colors.white,
-//                     fontSize: 20,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//                 SizedBox(height: 8),
-//                 Text(
-//                   'Panel Administrator',
-//                   style: TextStyle(color: Colors.white70, fontSize: 14),
-//                 ),
-//               ],
-//             ),
-//           ),
-
-//           // ===== LIST AKUN =====
-//           ListTile(
-//             leading: const Icon(Icons.people),
-//             title: const Text('List Akun'),
-//             selected: currentPage == 'admin',
-//             selectedTileColor: Colors.blue.shade50,
-//             onTap: () {
-//               Get.back();
-//               if (currentPage != 'admin') {
-//                 Get.offAll(() => const ListAkunPage());
-//               }
-//             },
-//           ),
-
-//           // ===== LOKASI =====
-//           ListTile(
-//             leading: const Icon(Icons.location_on),
-//             title: const Text('Lokasi'),
-//             selected: currentPage == 'lokasi',
-//             selectedTileColor: Colors.blue.shade50,
-//             onTap: () {
-//               Get.back();
-//               if (currentPage != 'lokasi') {
-//                 Get.offAll(() => LokasiPage(), binding: LokasiBinding());
-//               }
-//             },
-//           ),
-
-//           // ===== RIWAYAT SEMUA USER =====
-//           ListTile(
-//             leading: const Icon(Icons.history),
-//             title: const Text('Riwayat Semua User'),
-//             selected: currentPage == 'riwayat_semua_user',
-//             selectedTileColor: Colors.blue.shade50,
-//             onTap: () {
-//               Get.back();
-//               if (currentPage != 'riwayat_semua_user') {
-//                 Get.to(() => const RiwayatSemuaUserPage());
-//               }
-//             },
-//           ),
-
-//           const Divider(),
-
-//           // ===== LOGOUT =====
-//           ListTile(
-//             leading: const Icon(Icons.logout, color: Colors.red),
-//             title: const Text('Logout', style: TextStyle(color: Colors.red)),
-//             onTap: () {
-//               Get.back();
-//               Get.defaultDialog(
-//                 title: 'Konfirmasi Logout',
-//                 middleText: 'Yakin ingin keluar?',
-//                 textCancel: 'Batal',
-//                 textConfirm: 'Logout',
-//                 confirmTextColor: Colors.white,
-//                 buttonColor: Colors.red,
-//                 onConfirm: () {
-//                   Get.back();
-//                   final auth = Get.find<AuthController>();
-//                   auth.logout();
-//                 },
-//               );
-//             },
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-// lib/pages/admin/master_drawer.dart
-
 import 'package:flutter/material.dart';
-import 'package:frontend_flutter/pages/admin/listAkun/list_akun.dart';
-import 'package:frontend_flutter/pages/admin/lokasiPage/lokasi_page.dart';
-import 'package:frontend_flutter/pages/admin/riwayatSemuaUserPage/riwayat_semua_user_page.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
-import '../../bindings/lokasi_binding.dart';
+import 'riwayatSemuaUserPage/riwayat_semua_user_page.dart'; // IMPORT HALAMAN RIWAYAT
 
 class MasterDrawer extends StatelessWidget {
   final String currentPage;
@@ -129,97 +10,361 @@ class MasterDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authController = Get.find<AuthController>();
+
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Container(
+        color: Colors.white,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            // HEADER DRAWER DENGAN PROFILE
+            _buildHeader(authController),
+
+            const SizedBox(height: 8),
+
+            // ===== MENU LIST AKUN =====
+            _buildMenuItem(
+              icon: Icons.people,
+              title: 'List Akun',
+              routeName: '/admin',
+              pageName: 'admin',
+              iconColor: Colors.blue,
+            ),
+
+            // ===== MENU LOKASI USER =====
+            _buildMenuItem(
+              icon: Icons.location_on,
+              title: 'Lokasi User',
+              routeName: '/admin/lokasi',
+              pageName: 'lokasi',
+              iconColor: Colors.green,
+            ),
+
+            // ===== MENU PUSAT LOKASI =====
+            _buildMenuItem(
+              icon: Icons.map,
+              title: 'Pusat Lokasi',
+              routeName: '/admin/pusat-lokasi',
+              pageName: 'pusat-lokasi',
+              iconColor: Colors.purple,
+            ),
+
+            // ===== MENU RIWAYAT SEMUA USER (DIKEMBALIKAN) =====
+            _buildRiwayatMenuItem(),
+
+            const Divider(height: 32, thickness: 1),
+
+            // ===== MENU LOGOUT =====
+            _buildLogoutMenuItem(authController),
+
+            const SizedBox(height: 20),
+
+            // VERSION INFO
+            _buildVersionInfo(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ========== HEADER DRAWER ==========
+  Widget _buildHeader(AuthController authController) {
+    return Container(
+      height: 200,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.blue, Colors.blueAccent],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Menu Admin',
-                  style: TextStyle(
+          // Circle avatar dengan inisial
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+            ),
+            child: Center(
+              child: Obx(() {
+                final userName = authController.userName;
+                return Text(
+                  userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
+                  style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 36,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Panel Administrator',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-              ],
+                );
+              }),
             ),
           ),
+          const SizedBox(height: 12),
 
-          // ===== LIST AKUN =====
-          ListTile(
-            leading: const Icon(Icons.people),
-            title: const Text('List Akun'),
-            selected: currentPage == 'admin',
-            selectedTileColor: Colors.blue.shade50,
-            onTap: () {
-              Get.back();
-              if (currentPage != 'admin') {
-                Get.offAll(() => const ListAkunPage());
-              }
-            },
+          // Nama user
+          Obx(
+            () => Text(
+              authController.userName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
+          const SizedBox(height: 4),
 
-          // ===== LOKASI =====
-          ListTile(
-            leading: const Icon(Icons.location_on),
-            title: const Text('Lokasi'),
-            selected: currentPage == 'lokasi',
-            selectedTileColor: Colors.blue.shade50,
-            onTap: () {
-              Get.back();
-              if (currentPage != 'lokasi') {
-                Get.offAll(() => LokasiPage(), binding: LokasiBinding());
-              }
-            },
+          // Role
+          Obx(
+            () => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                authController.userRole.toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
           ),
+        ],
+      ),
+    );
+  }
 
-          // ===== RIWAYAT SEMUA USER =====
-          ListTile(
-            leading: const Icon(Icons.history),
-            title: const Text('Riwayat Semua User'),
-            selected: currentPage == 'riwayat_semua_user',
-            selectedTileColor: Colors.blue.shade50,
-            onTap: () {
-              Get.back();
-              if (currentPage != 'riwayat_semua_user') {
-                Get.to(() => const RiwayatSemuaUserPage());
-              }
-            },
+  // ========== MENU ITEM DENGAN ROUTE ==========
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required String routeName,
+    required String pageName,
+    Color iconColor = Colors.blue,
+  }) {
+    final isSelected = currentPage == pageName;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue.shade50 : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue : iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
           ),
+          child: Icon(
+            icon,
+            color: isSelected ? Colors.white : iconColor,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? Colors.blue : Colors.black87,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 15,
+          ),
+        ),
+        trailing: isSelected
+            ? Container(
+                width: 5,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              )
+            : null,
+        onTap: () {
+          Get.back(); // Tutup drawer
+          if (!isSelected) {
+            // Navigasi menggunakan route yang sudah didaftarkan
+            Get.offAllNamed(routeName);
+          }
+        },
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
 
-          const Divider(),
+  // ========== MENU RIWAYAT SEMUA USER (MENGGUNAKAN STYLE LAMA) ==========
+  Widget _buildRiwayatMenuItem() {
+    final isSelected = currentPage == 'riwayat_semua_user';
 
-          // ===== LOGOUT =====
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              Get.back();
-              Get.defaultDialog(
-                title: 'Konfirmasi Logout',
-                middleText: 'Yakin ingin keluar?',
-                textCancel: 'Batal',
-                textConfirm: 'Logout',
-                confirmTextColor: Colors.white,
-                buttonColor: Colors.red,
-                onConfirm: () {
-                  Get.back();
-                  final auth = Get.find<AuthController>();
-                  auth.logout();
-                },
-              );
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue.shade50 : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue : Colors.orange.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.history,
+            color: isSelected ? Colors.white : Colors.orange,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          'Riwayat Semua User',
+          style: TextStyle(
+            color: isSelected ? Colors.blue : Colors.black87,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 15,
+          ),
+        ),
+        trailing: isSelected
+            ? Container(
+                width: 5,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              )
+            : null,
+        onTap: () {
+          Get.back(); // Tutup drawer
+          if (!isSelected) {
+            // Navigasi langsung ke halaman (tanpa route)
+            Get.to(() => const RiwayatSemuaUserPage());
+          }
+        },
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  // ========== MENU LOGOUT ==========
+  Widget _buildLogoutMenuItem(AuthController authController) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.logout, color: Colors.red, size: 20),
+        ),
+        title: const Text(
+          'Logout',
+          style: TextStyle(
+            color: Colors.red,
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
+        ),
+        onTap: () {
+          Get.back(); // Tutup drawer
+          _showLogoutDialog(authController);
+        },
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  // ========== VERSION INFO ==========
+  Widget _buildVersionInfo() {
+    return Center(
+      child: Column(
+        children: [
+          Text(
+            'Version 1.0.0',
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '© 2024 Absensi App',
+            style: TextStyle(fontSize: 10, color: Colors.grey.shade300),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========== DIALOG KONFIRMASI LOGOUT ==========
+  void _showLogoutDialog(AuthController authController) {
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.logout, color: Colors.red, size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Konfirmasi Logout',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ],
+        ),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            'Apakah Anda yakin ingin keluar dari aplikasi?',
+            style: TextStyle(fontSize: 14),
+          ),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.grey,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back(); // Tutup dialog
+              authController.logout();
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Logout',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
