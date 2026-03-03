@@ -26,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false, // Menghilangkan tombol back
+        automaticallyImplyLeading: false,
       ),
       body: Obx(
         () => authController.isLoading.value
@@ -140,7 +140,7 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 8),
 
-                    // Forgot Password Link
+                    // lupa password
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
@@ -191,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 16),
 
-                    // Register Link
+                    // ttambah akun
                     Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -274,7 +274,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() {
-    // Reset error
+    // melakukan reset error
     emailError.value = '';
     passwordError.value = '';
 
@@ -302,7 +302,6 @@ class _LoginPageState extends State<LoginPage> {
 
     if (!isValid) return;
 
-    // Panggil controller login
     authController.login(email, password);
   }
 }

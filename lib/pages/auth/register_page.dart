@@ -48,7 +48,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     const SizedBox(height: 20),
 
-                    // Header
+                    // ini Header
                     Center(
                       child: Column(
                         children: [

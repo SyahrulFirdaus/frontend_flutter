@@ -1,5 +1,3 @@
-// lib/pages/user/modals/absensi_modal.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -84,6 +82,24 @@ class _AbsensiModalState extends State<AbsensiModal> {
 
   Color _getButtonColor() {
     return widget.tipe == 'masuk' ? Colors.blue : Colors.orange;
+  }
+
+  // ================= METHOD UNTUK SUBMIT ABSENSI (MENGGUNAKAN PROSES ABSENSI) =================
+  Future<void> _submitAbsensi() async {
+    if (selectedLokasiId == null ||
+        selectedLokasiNama == null ||
+        selectedLokasiKoordinat == null) {
+      return;
+    }
+
+    // MENGGUNAKAN METHOD prosesAbsensi YANG SUDAH ADA DI CONTROLLER
+    // Method ini akan menangani: GPS, cari lokasi terdekat, cek radius, foto, dan kirim ke server
+    await lokasiController.prosesAbsensi(widget.tipe);
+
+    // Tutup modal setelah proses absensi selesai
+    if (mounted) {
+      Get.back();
+    }
   }
 
   @override
@@ -181,6 +197,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
           // Content
           Expanded(
             child: Obx(() {
+              // Loading state
               if (lokasiController.isLoading.value) {
                 return const Center(
                   child: Column(
@@ -194,6 +211,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
                 );
               }
 
+              // Error state
               if (lokasiController.errorMessage.isNotEmpty) {
                 return Center(
                   child: Padding(
@@ -221,6 +239,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
                 );
               }
 
+              // Empty state
               if (lokasiController.userLokasis.isEmpty) {
                 return Center(
                   child: Padding(
@@ -257,6 +276,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
                 );
               }
 
+              // Normal state dengan daftar lokasi
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -469,89 +489,11 @@ class _AbsensiModalState extends State<AbsensiModal> {
                       width: double.infinity,
                       height: 45,
                       child: Obx(() {
-                        final isLoading = lokasiController.isLoading.value;
+                        final isSubmitting =
+                            lokasiController.isSubmitting.value;
                         return ElevatedButton(
-                          onPressed: (selectedLokasiId != null && !isLoading)
-                              ? () async {
-                                  // Submit absensi sesuai tipe
-                                  final success = widget.tipe == 'masuk'
-                                      ? await lokasiController
-                                            .submitAbsensiMasuk(
-                                              selectedLokasiId!,
-                                              selectedLokasiNama!,
-                                              selectedLokasiKoordinat!,
-                                            )
-                                      : await lokasiController
-                                            .submitAbsensiPulang(
-                                              selectedLokasiId!,
-                                              selectedLokasiNama!,
-                                              selectedLokasiKoordinat!,
-                                            );
-
-                                  if (success) {
-                                    // Tampilkan success dialog
-                                    Get.dialog(
-                                      AlertDialog(
-                                        title: const Icon(
-                                          Icons.check_circle,
-                                          color: Colors.green,
-                                          size: 60,
-                                        ),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              'Absen ${widget.tipe} Berhasil!',
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              'Anda telah absen ${widget.tipe} di:',
-                                              style: TextStyle(
-                                                color: Colors.grey.shade600,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              selectedLokasiNama!,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              'Waktu: ${DateTime.now().toString().substring(0, 16)}',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: Colors.grey.shade600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Get.back(); // Tutup dialog sukses
-                                              Get.back(); // Tutup modal absensi
-
-                                              // Refresh data
-                                              lokasiController
-                                                  .fetchUserLokasi();
-                                              lokasiController
-                                                  .cekStatusHariIni();
-                                            },
-                                            child: const Text('OK'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }
-                                }
+                          onPressed: (selectedLokasiId != null && !isSubmitting)
+                              ? _submitAbsensi
                               : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _getButtonColor(),
@@ -562,7 +504,7 @@ class _AbsensiModalState extends State<AbsensiModal> {
                             elevation: 2,
                           ),
                           child: Text(
-                            isLoading
+                            isSubmitting
                                 ? 'Memproses...'
                                 : (selectedLokasiId != null
                                       ? _getButtonText()

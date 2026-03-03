@@ -15,13 +15,14 @@ import 'auth_controller.dart';
 
 class UserLokasiController extends GetxController {
   final auth = Get.find<AuthController>();
-  // final String baseUrl = 'http://10.0.2.2:8000/api';
+  final String baseUrl =
+      'http://192.168.95.243:8000/api'; // Sesuaikan dengan IP Anda
   // final String baseUrl =
-  //     'http://192.168.1.9:8000/api'; // Sesuaikan dengan IP komputer Anda
-  final String baseUrl = 'http://192.168.95.243:8000/api';
+  //     'http://192.168.1.9:8000/api'; // Sesuaikan dengan IP Anda
 
   var userLokasis = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;
+  var isSubmitting = false.obs;
   var errorMessage = ''.obs;
 
   // Untuk riwayat absensi
@@ -43,10 +44,16 @@ class UserLokasiController extends GetxController {
   var isTakingPhoto = false.obs;
   var isDetectingFace = false.obs;
 
+  // Untuk deteksi lokasi otomatis (hanya digunakan saat absen)
+  var lokasiTerpilih = Rxn<Map<String, dynamic>>();
+  var jarakTerdekat = 0.0.obs;
+  var isInRange = false.obs;
+
   @override
   void onInit() {
     super.onInit();
     print('🟢 UserLokasiController diinisialisasi');
+    // Hanya cek status, tidak fetch lokasi
     cekStatusHariIni();
   }
 
@@ -54,6 +61,11 @@ class UserLokasiController extends GetxController {
   Future<void> cekStatusHariIni() async {
     try {
       print('📌 Cek status absen hari ini...');
+
+      if (auth.token.isEmpty) {
+        print('⚠️ Token kosong');
+        return;
+      }
 
       final response = await http
           .get(
@@ -64,8 +76,6 @@ class UserLokasiController extends GetxController {
             },
           )
           .timeout(const Duration(seconds: 5));
-
-      print('📨 Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -92,12 +102,7 @@ class UserLokasiController extends GetxController {
     errorMessage.value = '';
 
     try {
-      print('=' * 50);
       print('📌 FETCH USER LOKASI - DIMULAI');
-      print('🔑 Token: ${auth.token.substring(0, 20)}...');
-      print('👤 User ID: ${auth.user['id']}');
-      print('👤 User Name: ${auth.user['name']}');
-      print('📌 URL: $baseUrl/user/lokasi');
 
       final response = await http
           .get(
@@ -109,9 +114,6 @@ class UserLokasiController extends GetxController {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('📨 Response status: ${response.statusCode}');
-      print('📨 Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final dynamic data = jsonDecode(response.body);
 
@@ -121,47 +123,21 @@ class UserLokasiController extends GetxController {
 
           if (userLokasis.isEmpty) {
             errorMessage.value = 'Belum ada lokasi yang ditentukan untuk Anda';
-            print('⚠️ Data lokasi kosong');
-          } else {
-            for (var lokasi in userLokasis) {
-              print(
-                '   - ID: ${lokasi['id']}, Nama: ${lokasi['lokasi']}, Koordinat: ${lokasi['koordinat']}',
-              );
-            }
           }
         } else {
           userLokasis.value = [];
           errorMessage.value = 'Format data tidak sesuai';
-          print('❌ Data bukan List: $data');
         }
       } else if (response.statusCode == 401) {
         errorMessage.value = 'Sesi habis, silahkan login ulang';
-        print('❌ Unauthorized - Token mungkin expired');
-        Get.snackbar(
-          'Sesi Habis',
-          'Silahkan login ulang',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
         Future.delayed(const Duration(seconds: 2), () => auth.logout());
-      } else if (response.statusCode == 403) {
-        errorMessage.value = 'Akses ditolak. Anda bukan user.';
-        print('❌ Forbidden - Bukan role user');
-      } else if (response.statusCode == 404) {
-        errorMessage.value = 'Endpoint tidak ditemukan. Cek URL.';
-        print('❌ 404 Not Found - URL: $baseUrl/user/lokasi');
       } else {
         errorMessage.value = 'Error ${response.statusCode}';
-        print('❌ Error lain: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Error: $e');
       errorMessage.value = 'Gagal memuat data: ${e.toString()}';
     } finally {
       isLoading.value = false;
-      print('📌 FETCH USER LOKASI - SELESAI');
-      print('=' * 50);
     }
   }
 
@@ -317,6 +293,7 @@ class UserLokasiController extends GetxController {
 
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
       );
 
       String koordinat = '${position.latitude}, ${position.longitude}';
@@ -324,170 +301,18 @@ class UserLokasiController extends GetxController {
       return koordinat;
     } catch (e) {
       print('❌ Error getCurrentLocation: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal mendapatkan lokasi Anda. Pastikan GPS aktif.',
+        backgroundColor: Colors.red,
+      );
       return '';
     } finally {
       isGettingLocation.value = false;
     }
   }
 
-  // ================= SUBMIT ABSENSI MASUK =================
-  Future<bool> submitAbsensiMasuk(
-    String lokasiId,
-    String lokasiNama,
-    String koordinatLokasi,
-  ) async {
-    return _submitAbsensi(lokasiId, lokasiNama, koordinatLokasi, 'masuk');
-  }
-
-  // ================= SUBMIT ABSENSI PULANG =================
-  Future<bool> submitAbsensiPulang(
-    String lokasiId,
-    String lokasiNama,
-    String koordinatLokasi,
-  ) async {
-    return _submitAbsensi(lokasiId, lokasiNama, koordinatLokasi, 'pulang');
-  }
-
-  // ================= SUBMIT ABSENSI (GENERAL) =================
-  Future<bool> _submitAbsensi(
-    String lokasiId,
-    String lokasiNama,
-    String koordinatLokasi,
-    String tipe,
-  ) async {
-    isLoading.value = true;
-
-    try {
-      print('🔥 SUBMIT ABSENSI $tipe - $lokasiNama');
-
-      if (auth.token.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Token tidak ditemukan',
-          backgroundColor: Colors.red,
-        );
-        return false;
-      }
-
-      // Validasi apakah sudah absen untuk tipe ini
-      if (tipe == 'masuk' && sudahMasuk.value) {
-        Get.snackbar(
-          'Info',
-          'Anda sudah absen masuk hari ini',
-          backgroundColor: Colors.orange,
-        );
-        return false;
-      }
-      if (tipe == 'pulang' && sudahPulang.value) {
-        Get.snackbar(
-          'Info',
-          'Anda sudah absen pulang hari ini',
-          backgroundColor: Colors.orange,
-        );
-        return false;
-      }
-
-      final lokasiIdInt = int.tryParse(lokasiId);
-      if (lokasiIdInt == null) {
-        Get.snackbar(
-          'Error',
-          'ID Lokasi tidak valid',
-          backgroundColor: Colors.red,
-        );
-        return false;
-      }
-
-      // Ambil lokasi real-time
-      String titikKoordinatKamu = await getCurrentLocation();
-      if (titikKoordinatKamu.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Gagal mendapatkan lokasi Anda',
-          backgroundColor: Colors.red,
-        );
-        return false;
-      }
-
-      // Validasi jarak
-      bool jarakValid = await _validasiJarak(
-        koordinatLokasi,
-        titikKoordinatKamu,
-      );
-      if (!jarakValid) return false;
-
-      // Ambil foto
-      File? foto = await takePhotoWithFaceDetection();
-      if (foto == null) {
-        Get.snackbar(
-          'Info',
-          'Absen dibatalkan',
-          backgroundColor: Colors.orange,
-        );
-        return false;
-      }
-
-      // Kirim ke server
-      return await _submitWithPhoto(
-        lokasiIdInt,
-        lokasiNama,
-        titikKoordinatKamu,
-        foto,
-        tipe,
-      );
-    } catch (e) {
-      print('❌ Exception: $e');
-      return false;
-    } finally {
-      isLoading.value = false;
-      cekStatusHariIni(); // Refresh status
-    }
-  }
-
-  // ================= VALIDASI JARAK =================
-  Future<bool> _validasiJarak(
-    String koordinatLokasi,
-    String titikKoordinatKamu,
-  ) async {
-    try {
-      // Parse koordinat lokasi
-      final lokasiParts = koordinatLokasi.split(',');
-      final kamuParts = titikKoordinatKamu.split(',');
-
-      if (lokasiParts.length != 2 || kamuParts.length != 2) return false;
-
-      final lokasiLat = double.tryParse(lokasiParts[0].trim());
-      final lokasiLng = double.tryParse(lokasiParts[1].trim());
-      final kamuLat = double.tryParse(kamuParts[0].trim());
-      final kamuLng = double.tryParse(kamuParts[1].trim());
-
-      if (lokasiLat == null ||
-          lokasiLng == null ||
-          kamuLat == null ||
-          kamuLng == null) {
-        return false;
-      }
-
-      final lokasiLatLng = LatLng(lokasiLat, lokasiLng);
-      final kamuLatLng = LatLng(kamuLat, kamuLng);
-
-      double jarakMeter = _hitungJarakDalamMeter(lokasiLatLng, kamuLatLng);
-      print('📏 Jarak: ${jarakMeter.toStringAsFixed(2)} meter');
-
-      const double batasMaksimal = 100.0;
-
-      if (jarakMeter > batasMaksimal) {
-        await _showJarakTerlaluJauhDialog(jarakMeter, batasMaksimal);
-        return false;
-      }
-
-      return true;
-    } catch (e) {
-      print('Error validasi jarak: $e');
-      return false;
-    }
-  }
-
-  // ================= HITUNG JARAK =================
+  // ================= HITUNG JARAK (Haversine Formula) =================
   double _hitungJarakDalamMeter(LatLng titik1, LatLng titik2) {
     const double R = 6371;
 
@@ -506,10 +331,169 @@ class UserLokasiController extends GetxController {
     return distanceKm * 1000;
   }
 
-  // ================= KIRIM DENGAN FOTO =================
-  Future<bool> _submitWithPhoto(
-    int lokasiIdInt,
-    String lokasiNama,
+  // ================= CARI LOKASI TERDEKAT =================
+  Future<Map<String, dynamic>?> cariLokasiTerdekat(String koordinatUser) async {
+    // Pastikan data lokasi tersedia
+    if (userLokasis.isEmpty) {
+      await fetchUserLokasi();
+    }
+
+    if (userLokasis.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Anda belum memiliki lokasi absensi. Hubungi admin.',
+        backgroundColor: Colors.red,
+      );
+      return null;
+    }
+
+    try {
+      final userParts = koordinatUser.split(',');
+      if (userParts.length != 2) return null;
+
+      final userLat = double.tryParse(userParts[0].trim());
+      final userLng = double.tryParse(userParts[1].trim());
+
+      if (userLat == null || userLng == null) return null;
+
+      final userLatLng = LatLng(userLat, userLng);
+
+      List<Map<String, dynamic>> lokasiDenganJarak = [];
+
+      for (var lokasi in userLokasis) {
+        final lokasiParts = lokasi['koordinat'].split(',');
+        if (lokasiParts.length != 2) continue;
+
+        final lokasiLat = double.tryParse(lokasiParts[0].trim());
+        final lokasiLng = double.tryParse(lokasiParts[1].trim());
+
+        if (lokasiLat == null || lokasiLng == null) continue;
+
+        final lokasiLatLng = LatLng(lokasiLat, lokasiLng);
+        final jarak = _hitungJarakDalamMeter(userLatLng, lokasiLatLng);
+
+        lokasiDenganJarak.add({
+          'id': lokasi['id'],
+          'lokasi': lokasi['lokasi'],
+          'koordinat': lokasi['koordinat'],
+          'jarak': jarak,
+          'dalam_radius': jarak <= 100,
+        });
+      }
+
+      // Urutkan berdasarkan jarak terdekat
+      lokasiDenganJarak.sort((a, b) => a['jarak'].compareTo(b['jarak']));
+
+      if (lokasiDenganJarak.isNotEmpty) {
+        lokasiTerpilih.value = lokasiDenganJarak.first;
+        jarakTerdekat.value = lokasiDenganJarak.first['jarak'];
+        isInRange.value = lokasiDenganJarak.first['dalam_radius'];
+
+        print('📍 Lokasi terdekat: ${lokasiTerpilih.value!['lokasi']}');
+        print('📏 Jarak: ${jarakTerdekat.value.toStringAsFixed(2)} meter');
+        print('✅ Dalam radius: $isInRange');
+      }
+
+      return lokasiDenganJarak.first;
+    } catch (e) {
+      print('❌ Error cari lokasi terdekat: $e');
+      return null;
+    }
+  }
+
+  // ================= PROSES ABSENSI (DIPANGGIL SAAT KLIK TOMBOL) =================
+  Future<void> prosesAbsensi(String tipe) async {
+    // CEK STATUS
+    if (tipe == 'masuk' && sudahMasuk.value) {
+      Get.snackbar(
+        'Info',
+        'Anda sudah absen masuk hari ini',
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+
+    if (tipe == 'pulang' && sudahPulang.value) {
+      Get.snackbar(
+        'Info',
+        'Anda sudah absen pulang hari ini',
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+
+    if (tipe == 'pulang' && !sudahMasuk.value) {
+      Get.snackbar(
+        'Info',
+        'Anda harus absen masuk terlebih dahulu',
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+
+    isSubmitting.value = true;
+
+    try {
+      // 1. AMBIL LOKASI GPS
+      String titikKoordinatKamu = await getCurrentLocation();
+      if (titikKoordinatKamu.isEmpty) {
+        return;
+      }
+
+      // 2. CARI LOKASI TERDEKAT
+      final lokasiTerdekat = await cariLokasiTerdekat(titikKoordinatKamu);
+
+      if (lokasiTerdekat == null) {
+        return;
+      }
+
+      // 3. CEK APAKAH DALAM RADIUS
+      if (!lokasiTerdekat['dalam_radius']) {
+        await _showJarakTerlaluJauhDialog(
+          lokasiTerdekat['jarak'],
+          lokasiTerdekat['lokasi'],
+        );
+        return;
+      }
+
+      // 4. AMBIL FOTO
+      File? foto = await takePhotoWithFaceDetection();
+      if (foto == null) {
+        Get.snackbar(
+          'Info',
+          'Absen dibatalkan',
+          backgroundColor: Colors.orange,
+        );
+        return;
+      }
+
+      // 5. KIRIM KE SERVER
+      bool success = await _kirimAbsensiOtomatis(
+        lokasiTerdekat,
+        titikKoordinatKamu,
+        foto,
+        tipe,
+      );
+
+      if (success) {
+        // 6. TAMPILKAN DIALOG SUKSES
+        _showSuccessDialog(tipe, lokasiTerdekat);
+      }
+    } catch (e) {
+      print('❌ Error proses absensi: $e');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan: ${e.toString()}',
+        backgroundColor: Colors.red,
+      );
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
+
+  // ================= KIRIM ABSENSI OTOMATIS KE SERVER =================
+  Future<bool> _kirimAbsensiOtomatis(
+    Map<String, dynamic> lokasiTerpilih,
     String titikKoordinatKamu,
     File foto,
     String tipe,
@@ -517,7 +501,7 @@ class UserLokasiController extends GetxController {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl/user/absensi/$tipe'),
+        Uri.parse('$baseUrl/user/absensi/otomatis'),
       );
 
       request.headers.addAll({
@@ -525,7 +509,7 @@ class UserLokasiController extends GetxController {
         'Authorization': 'Bearer ${auth.token}',
       });
 
-      request.fields['lokasi_id'] = lokasiIdInt.toString();
+      request.fields['tipe_absen'] = tipe;
       request.fields['titik_koordinat_kamu'] = titikKoordinatKamu;
 
       request.files.add(
@@ -536,23 +520,22 @@ class UserLokasiController extends GetxController {
         ),
       );
 
-      print('📤 Mengirim request $tipe...');
+      print('📤 Mengirim request absensi otomatis $tipe...');
       var streamedResponse = await request.send().timeout(
         const Duration(seconds: 15),
       );
       var response = await http.Response.fromStream(streamedResponse);
 
-      print('📨 Response status: ${response.statusCode}');
-      print('📨 Response body: ${response.body}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar(
-          'Berhasil',
-          'Absen $tipe di $lokasiNama berhasil',
-          backgroundColor: Colors.green,
-          snackPosition: SnackPosition.TOP,
-        );
+      if (response.statusCode == 201 || response.statusCode == 200) {
         return true;
+      } else if (response.statusCode == 403) {
+        final errorData = jsonDecode(response.body);
+        Get.snackbar(
+          '❌ Gagal',
+          errorData['message'] ?? 'Anda berada di luar jangkauan absen',
+          backgroundColor: Colors.red,
+        );
+        return false;
       } else {
         try {
           final errorData = jsonDecode(response.body);
@@ -576,8 +559,55 @@ class UserLokasiController extends GetxController {
     }
   }
 
+  // ================= DIALOG SUKSES =================
+  void _showSuccessDialog(String tipe, Map<String, dynamic> lokasiTerpilih) {
+    Get.dialog(
+      AlertDialog(
+        title: const Icon(Icons.check_circle, color: Colors.green, size: 60),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Absen $tipe Berhasil!',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text('Anda telah absen $tipe di:'),
+            const SizedBox(height: 4),
+            Text(
+              lokasiTerpilih['lokasi'],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Jarak: ${lokasiTerpilih['jarak'].toStringAsFixed(1)} meter',
+              style: const TextStyle(fontSize: 12),
+            ),
+            Text(
+              'Waktu: ${DateTime.now().toString().substring(0, 16)}',
+              style: const TextStyle(fontSize: 11, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Get.back(); // Tutup dialog
+              cekStatusHariIni(); // Refresh status
+              fetchUserLokasi(); // Refresh lokasi
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ================= DIALOG JARAK TERLALU JAUH =================
-  Future<void> _showJarakTerlaluJauhDialog(double jarak, double batas) async {
+  Future<void> _showJarakTerlaluJauhDialog(
+    double jarak,
+    String lokasiTerdekat,
+  ) async {
     String jarakFormat = jarak < 1000
         ? '${jarak.toStringAsFixed(1)} meter'
         : '${(jarak / 1000).toStringAsFixed(2)} km';
@@ -601,11 +631,13 @@ class UserLokasiController extends GetxController {
               ),
             ),
             const SizedBox(height: 12),
-            Text('Jarak Anda $jarakFormat', textAlign: TextAlign.center),
+            Text('Lokasi terdekat: $lokasiTerdekat'),
+            const SizedBox(height: 4),
+            Text('Jarak Anda $jarakFormat'),
             const SizedBox(height: 8),
-            Text(
-              'Batas maksimal ${batas.toStringAsFixed(0)} meter',
-              style: const TextStyle(color: Colors.red),
+            const Text(
+              'Batas maksimal 100 meter',
+              style: TextStyle(color: Colors.red),
             ),
             const SizedBox(height: 16),
             const Text('Anda tidak dapat melakukan absensi.'),
@@ -645,7 +677,6 @@ class UserLokasiController extends GetxController {
         final data = jsonDecode(response.body);
         if (data is List) {
           riwayatAbsensi.value = List<Map<String, dynamic>>.from(data);
-          print('✅ Riwayat: ${riwayatAbsensi.length} data');
         } else {
           riwayatAbsensi.value = [];
         }
@@ -670,6 +701,9 @@ class UserLokasiController extends GetxController {
     sudahPulang.value = false;
     dataMasuk.value = null;
     dataPulang.value = null;
+    lokasiTerpilih.value = null;
+    jarakTerdekat.value = 0.0;
+    isInRange.value = false;
   }
 
   // ================= DEBUG =================
@@ -684,6 +718,7 @@ class UserLokasiController extends GetxController {
     print('Status Pulang: $sudahPulang');
     print('Lokasi Saat Ini: ${lokasiSaatIni.value}');
     print('Loading: $isLoading');
+    print('Submitting: $isSubmitting');
     print('=' * 50);
   }
 }
