@@ -15,28 +15,22 @@ class LokasiPage extends StatefulWidget {
 }
 
 class _LokasiPageState extends State<LokasiPage> {
-  // INISIALISASI CONTROLLER
   late final LokasiController controller;
-
-  // Untuk tab view
   final RxInt selectedTabIndex = 0.obs;
 
-  // Untuk preview map
   final Rx<LatLng?> selectedLocation = Rx<LatLng?>(null);
   GoogleMapController? mapController;
 
   @override
   void initState() {
     super.initState();
-    // PUT CONTROLLER SAAT HALAMAN DIBUKA
+
     controller = Get.put(LokasiController());
     print('🟢 LokasiPage initialized with controller');
   }
 
   @override
   void dispose() {
-    // HAPUS CONTROLLER SAAT HALAMAN DITUTUP (opsional, bisa dihapus jika ingin permanen)
-    // Get.delete<LokasiController>();
     mapController?.dispose();
     super.dispose();
   }
@@ -80,7 +74,6 @@ class _LokasiPageState extends State<LokasiPage> {
         ),
         drawer: const MasterDrawer(currentPage: 'lokasi'),
         body: Obx(() {
-          // CEK TOKEN
           if (auth.token.isEmpty) {
             return const Center(
               child: Column(
@@ -97,7 +90,6 @@ class _LokasiPageState extends State<LokasiPage> {
             );
           }
 
-          // CEK LOADING STATE
           if (controller.isUserLoading.value) {
             return const Center(
               child: Column(
@@ -111,7 +103,6 @@ class _LokasiPageState extends State<LokasiPage> {
             );
           }
 
-          // TAMPILKAN CONTENT
           return const TabBarView(children: [_LokasiContent()]);
         }),
       ),
@@ -119,13 +110,11 @@ class _LokasiPageState extends State<LokasiPage> {
   }
 }
 
-// ========== CONTENT WIDGET ==========
 class _LokasiContent extends StatelessWidget {
   const _LokasiContent();
 
   @override
   Widget build(BuildContext context) {
-    // PASTIKAN CONTROLLER SUDAH ADA
     final controller = Get.find<LokasiController>();
 
     return RefreshIndicator(
@@ -139,14 +128,9 @@ class _LokasiContent extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // FORM MULTIPLE ENTRY
             const LokasiMultipleForm(),
             const SizedBox(height: 16),
-
-            // TABEL LOKASI
             const LokasiTableWidget(),
-
-            // EXTRA SPACE
             const SizedBox(height: 20),
           ],
         ),
@@ -155,7 +139,6 @@ class _LokasiContent extends StatelessWidget {
   }
 }
 
-// ========== HELPER FUNCTIONS (untuk digunakan di widget lain) ==========
 extension LokasiPageHelper on LokasiController {
   int getValidEntriesCount() {
     return multipleLokasiEntries.where((entry) {

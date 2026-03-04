@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
-import 'riwayatSemuaUserPage/riwayat_semua_user_page.dart'; // IMPORT HALAMAN RIWAYAT
+import 'riwayatSemuaUserPage/riwayat_semua_user_page.dart';
 
 class MasterDrawer extends StatelessWidget {
   final String currentPage;
@@ -18,12 +18,10 @@ class MasterDrawer extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // HEADER DRAWER DENGAN PROFILE
             _buildHeader(authController),
 
             const SizedBox(height: 8),
 
-            // ===== MENU LIST AKUN =====
             _buildMenuItem(
               icon: Icons.people,
               title: 'List Akun',
@@ -32,7 +30,6 @@ class MasterDrawer extends StatelessWidget {
               iconColor: Colors.blue,
             ),
 
-            // ===== MENU LOKASI USER =====
             _buildMenuItem(
               icon: Icons.location_on,
               title: 'Lokasi User',
@@ -41,26 +38,22 @@ class MasterDrawer extends StatelessWidget {
               iconColor: Colors.green,
             ),
 
-            // ===== MENU PUSAT LOKASI =====
             _buildMenuItem(
               icon: Icons.map,
-              title: 'Pusat Lokasi',
+              title: 'Pengaturan Lokasi',
               routeName: '/admin/pusat-lokasi',
               pageName: 'pusat-lokasi',
               iconColor: Colors.purple,
             ),
 
-            // ===== MENU RIWAYAT SEMUA USER (DIKEMBALIKAN) =====
             _buildRiwayatMenuItem(),
 
             const Divider(height: 32, thickness: 1),
 
-            // ===== MENU LOGOUT =====
             _buildLogoutMenuItem(authController),
 
             const SizedBox(height: 20),
 
-            // VERSION INFO
             _buildVersionInfo(),
           ],
         ),
@@ -68,7 +61,6 @@ class MasterDrawer extends StatelessWidget {
     );
   }
 
-  // ========== HEADER DRAWER ==========
   Widget _buildHeader(AuthController authController) {
     return Container(
       height: 200,
@@ -86,7 +78,6 @@ class MasterDrawer extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Circle avatar dengan inisial
           Container(
             width: 80,
             height: 80,
@@ -111,7 +102,6 @@ class MasterDrawer extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Nama user
           Obx(
             () => Text(
               authController.userName,
@@ -124,7 +114,6 @@ class MasterDrawer extends StatelessWidget {
           ),
           const SizedBox(height: 4),
 
-          // Role
           Obx(
             () => Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -148,7 +137,6 @@ class MasterDrawer extends StatelessWidget {
     );
   }
 
-  // ========== MENU ITEM DENGAN ROUTE ==========
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
@@ -196,9 +184,8 @@ class MasterDrawer extends StatelessWidget {
               )
             : null,
         onTap: () {
-          Get.back(); // Tutup drawer
+          Get.back();
           if (!isSelected) {
-            // Navigasi menggunakan route yang sudah didaftarkan
             Get.offAllNamed(routeName);
           }
         },
@@ -207,7 +194,6 @@ class MasterDrawer extends StatelessWidget {
     );
   }
 
-  // ========== MENU RIWAYAT SEMUA USER (MENGGUNAKAN STYLE LAMA) ==========
   Widget _buildRiwayatMenuItem() {
     final isSelected = currentPage == 'riwayat_semua_user';
 
@@ -249,9 +235,8 @@ class MasterDrawer extends StatelessWidget {
               )
             : null,
         onTap: () {
-          Get.back(); // Tutup drawer
+          Get.back();
           if (!isSelected) {
-            // Navigasi langsung ke halaman (tanpa route)
             Get.to(() => const RiwayatSemuaUserPage());
           }
         },
@@ -260,7 +245,6 @@ class MasterDrawer extends StatelessWidget {
     );
   }
 
-  // ========== MENU LOGOUT ==========
   Widget _buildLogoutMenuItem(AuthController authController) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -282,7 +266,7 @@ class MasterDrawer extends StatelessWidget {
           ),
         ),
         onTap: () {
-          Get.back(); // Tutup drawer
+          Get.back();
           _showLogoutDialog(authController);
         },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -290,7 +274,6 @@ class MasterDrawer extends StatelessWidget {
     );
   }
 
-  // ========== VERSION INFO ==========
   Widget _buildVersionInfo() {
     return Center(
       child: Column(
@@ -309,7 +292,6 @@ class MasterDrawer extends StatelessWidget {
     );
   }
 
-  // ========== DIALOG KONFIRMASI LOGOUT ==========
   void _showLogoutDialog(AuthController authController) {
     Get.dialog(
       AlertDialog(
@@ -349,7 +331,7 @@ class MasterDrawer extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              Get.back(); // Tutup dialog
+              Get.back(); //
               authController.logout();
             },
             style: ElevatedButton.styleFrom(

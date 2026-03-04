@@ -1,5 +1,3 @@
-// lib/pages/admin/widgets/lokasi/lokasi_table_widget.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/lokasi_controller.dart';

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -8,9 +9,9 @@ class AuthController extends GetxController {
   static AuthController instance = Get.find();
 
   final box = GetStorage();
-  // final String baseUrl = 'http://192.168.1.9:8000/api';
+  // final String baseUrl = 'http://192.168.137.1:8000/api';
   final String baseUrl = 'http://192.168.95.243:8000/api';
-  // final String baseUrl = 'http://192.168.1.10:8000/api';
+  // final String baseUrl = 'http://10.0.2.2:8000/api';
 
   var isLoading = false.obs;
   var token = ''.obs;
@@ -186,7 +187,7 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     try {
       if (token.isNotEmpty) {
-        print('📤 Logout attempt');
+        print('Logout attempt');
         await http.post(
           Uri.parse('$baseUrl/logout'),
           headers: {

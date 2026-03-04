@@ -1,5 +1,3 @@
-// lib/pages/admin/widgets/list_akun/akun_empty_widget.dart
-
 import 'package:flutter/material.dart';
 
 class AkunEmptyWidget extends StatelessWidget {

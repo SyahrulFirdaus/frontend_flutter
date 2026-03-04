@@ -20,15 +20,12 @@ class LokasiMultipleForm extends GetView<LokasiController> {
             _buildUserDropdown(),
             const SizedBox(height: 24),
 
-            // TAB VIEW: PUSAT LOKASI vs MANUAL ENTRY
             _buildTabSection(),
 
             const SizedBox(height: 24),
 
-            // TOMBOL SUBMIT
             _buildSubmitButton(),
 
-            // TOMBOL RESET
             if (controller.selectedPusatLokasiIds.isNotEmpty ||
                 controller.multipleLokasiEntries.length > 1)
               _buildResetButton(),
@@ -119,7 +116,7 @@ class LokasiMultipleForm extends GetView<LokasiController> {
           }).toList(),
           onChanged: (v) {
             controller.selectedUserForMultiple.value = v ?? '';
-            // Refresh pusat lokasi saat user dipilih
+
             controller.fetchPusatLokasi();
           },
           validator: (value) {
@@ -158,7 +155,7 @@ class LokasiMultipleForm extends GetView<LokasiController> {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 400, // Tinggi tetap untuk tab content
+            height: 400,
             child: TabBarView(
               children: [_buildPusatLokasiList(), _buildManualEntryList()],
             ),
@@ -168,7 +165,6 @@ class LokasiMultipleForm extends GetView<LokasiController> {
     );
   }
 
-  // ========== TAB 1: PILIH LOKASI DARI PUSAT ==========
   Widget _buildPusatLokasiList() {
     return Obx(() {
       if (controller.pusatLokasis.isEmpty) {
@@ -206,7 +202,6 @@ class LokasiMultipleForm extends GetView<LokasiController> {
 
       return Column(
         children: [
-          // Header dengan select all
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
@@ -261,7 +256,6 @@ class LokasiMultipleForm extends GetView<LokasiController> {
           ),
           const SizedBox(height: 8),
 
-          // LIST LOKASI DENGAN CHECKBOX (SCROLLABLE)
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -367,7 +361,6 @@ class LokasiMultipleForm extends GetView<LokasiController> {
     });
   }
 
-  // ========== TAB 2: INPUT MANUAL ==========
   Widget _buildManualEntryList() {
     return Obx(
       () => ListView.builder(
@@ -442,7 +435,6 @@ class LokasiMultipleForm extends GetView<LokasiController> {
   }
 }
 
-// ========== WIDGET UNTUK MANUAL ENTRY ==========
 class _ManualEntryItem extends StatelessWidget {
   final int index;
   final LokasiController controller;

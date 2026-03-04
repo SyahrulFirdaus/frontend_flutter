@@ -8,7 +8,7 @@ import 'auth_controller.dart';
 class PusatLokasiController extends GetxController {
   final auth = Get.find<AuthController>();
   final String baseUrl = 'http://192.168.95.243:8000/api'; // untuk emulator
-  // final String baseUrl = 'http://192.168.1.9:8000/api'; // untuk device real
+  // final String baseUrl = 'http://10.0.2.2:8000/api'; // untuk device real
 
   // Observable variables
   var pusatLokasis = <PusatLokasiModel>[].obs;

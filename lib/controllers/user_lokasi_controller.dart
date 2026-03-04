@@ -17,8 +17,7 @@ class UserLokasiController extends GetxController {
   final auth = Get.find<AuthController>();
   final String baseUrl =
       'http://192.168.95.243:8000/api'; // Sesuaikan dengan IP Anda
-  // final String baseUrl =
-  //     'http://192.168.1.9:8000/api'; // Sesuaikan dengan IP Anda
+  // final String baseUrl = 'http://10.0.2.2:8000/api'; // Sesuaikan dengan IP Anda
 
   var userLokasis = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;
@@ -604,6 +603,57 @@ class UserLokasiController extends GetxController {
   }
 
   // ================= DIALOG JARAK TERLALU JAUH =================
+  // Future<void> _showJarakTerlaluJauhDialog(
+  //   double jarak,
+  //   String lokasiTerdekat,
+  // ) async {
+  //   String jarakFormat = jarak < 1000
+  //       ? '${jarak.toStringAsFixed(1)} meter'
+  //       : '${(jarak / 1000).toStringAsFixed(2)} km';
+
+  //   return Get.dialog(
+  //     AlertDialog(
+  //       title: const Icon(
+  //         Icons.warning_amber_rounded,
+  //         color: Colors.red,
+  //         size: 40,
+  //       ),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           const Text(
+  //             'Jarak Terlalu Jauh',
+  //             style: TextStyle(
+  //               fontSize: 18,
+  //               fontWeight: FontWeight.bold,
+  //               color: Colors.red,
+  //             ),
+  //           ),
+  //           const SizedBox(height: 12),
+  //           Text('Lokasi terdekat: $lokasiTerdekat'),
+  //           const SizedBox(height: 4),
+  //           Text('Jarak Anda $jarakFormat'),
+  //           const SizedBox(height: 8),
+  //           const Text(
+  //             'Batas maksimal 100 meter',
+  //             style: TextStyle(color: Colors.red),
+  //           ),
+  //           const SizedBox(height: 16),
+  //           const Text('Anda tidak dapat melakukan absensi.'),
+  //         ],
+  //       ),
+  //       actions: [
+  //         ElevatedButton(
+  //           onPressed: () => Get.back(),
+  //           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+  //           child: const Text('MENGERTI'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // ================= DIALOG JARAK TERLALU JAUH =================
   Future<void> _showJarakTerlaluJauhDialog(
     double jarak,
     String lokasiTerdekat,
@@ -613,43 +663,118 @@ class UserLokasiController extends GetxController {
         : '${(jarak / 1000).toStringAsFixed(2)} km';
 
     return Get.dialog(
-      AlertDialog(
-        title: const Icon(
-          Icons.warning_amber_rounded,
-          color: Colors.red,
-          size: 40,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Jarak Terlalu Jauh',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon Warning
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.location_off,
+                  color: Colors.red,
+                  size: 40,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Text('Lokasi terdekat: $lokasiTerdekat'),
-            const SizedBox(height: 4),
-            Text('Jarak Anda $jarakFormat'),
-            const SizedBox(height: 8),
-            const Text(
-              'Batas maksimal 100 meter',
-              style: TextStyle(color: Colors.red),
-            ),
-            const SizedBox(height: 16),
-            const Text('Anda tidak dapat melakukan absensi.'),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Get.back(),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('MENGERTI'),
+              const SizedBox(height: 16),
+
+              // Title
+              const Text(
+                'Anda tidak bisa absen',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+
+              // Message
+              Text(
+                'Anda di luar jangkauan absen',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 4),
+
+              // Jarak info
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Batas maksimal 100 meter',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange[700],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Detail jarak
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Lokasi terdekat: $lokasiTerdekat',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Jarak Anda $jarakFormat',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.red[600],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // OK Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'MENGERTI',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

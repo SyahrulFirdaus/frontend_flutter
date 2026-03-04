@@ -6,9 +6,9 @@ import '../models/user_model.dart';
 import 'auth_controller.dart';
 
 class UserController extends GetxController {
-  // final String baseUrl = 'http://192.168.1.9:8000/api';
+  // final String baseUrl = 'http://192.168.137.1:8000/api';
   final String baseUrl = 'http://192.168.95.243:8000/api';
-  // final String baseUrl = 'http://192.168.1.10:8000/api';
+  // final String baseUrl = 'http://10.0.2.2:8000/api';
 
   var users = <UserModel>[].obs;
   var isLoading = false.obs;
@@ -17,16 +17,13 @@ class UserController extends GetxController {
 
   Map<String, String> get _authHeaders => {
     'Accept': 'application/json',
-    'Authorization':
-        'Bearer ${authController.token.value}', // Perbaikan: .value
+    'Authorization': 'Bearer ${authController.token.value}',
   };
 
-  // ================= GET USERS (ADMIN) =================
   Future<void> fetchUsers() async {
     try {
       isLoading.value = true;
 
-      // Cek token
       if (authController.token.isEmpty) {
         Get.snackbar(
           'Error',
@@ -65,7 +62,7 @@ class UserController extends GetxController {
     }
   }
 
-  // ================= REGISTER USER (Hanya untuk admin) =================
+  // Register user
   Future<void> registerUser({
     required String name,
     required String email,
@@ -75,7 +72,6 @@ class UserController extends GetxController {
     try {
       isLoading.value = true;
 
-      // CEK TOKEN - Pastikan admin sudah login
       if (authController.token.isEmpty) {
         Get.snackbar(
           'Error',
@@ -86,16 +82,12 @@ class UserController extends GetxController {
         return;
       }
 
-      print('🔐 Register user dengan token: ${authController.token.value}');
-      print('👤 User yang login: ${authController.user}');
-
       final res = await http.post(
         Uri.parse('$baseUrl/register'),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer ${authController.token.value}', // TAMBAHKAN INI!
+          'Authorization': 'Bearer ${authController.token.value}',
         },
         body: jsonEncode({
           'name': name,
@@ -105,13 +97,10 @@ class UserController extends GetxController {
         }),
       );
 
-      print('📨 Response status: ${res.statusCode}');
-      print('📨 Response body: ${res.body}');
-
       if (res.statusCode == 200 || res.statusCode == 201) {
         Get.back();
         Get.snackbar(
-          '✅ Berhasil',
+          'Berhasil',
           'User $name berhasil didaftarkan',
           backgroundColor: Colors.green,
           colorText: Colors.white,
@@ -120,7 +109,6 @@ class UserController extends GetxController {
       } else {
         final err = jsonDecode(res.body);
 
-        // Cek khusus untuk error otorisasi
         if (res.statusCode == 401 || res.statusCode == 403) {
           Get.snackbar(
             'Error',
@@ -145,12 +133,10 @@ class UserController extends GetxController {
     }
   }
 
-  // ================= DELETE USER =================
   Future<void> deleteUser(int id) async {
     try {
       isLoading.value = true;
 
-      // CEK TOKEN
       if (authController.token.isEmpty) {
         Get.snackbar(
           'Error',
@@ -168,7 +154,7 @@ class UserController extends GetxController {
 
       if (res.statusCode == 200) {
         Get.snackbar(
-          '✅ Berhasil',
+          'Berhasil',
           'User berhasil dihapus',
           backgroundColor: Colors.green,
           colorText: Colors.white,

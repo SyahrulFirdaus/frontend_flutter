@@ -1,5 +1,3 @@
-// lib/pages/admin/widgets/list_akun/akun_info_card.dart
-
 import 'package:flutter/material.dart';
 
 class AkunInfoCard extends StatelessWidget {
@@ -17,7 +15,9 @@ class AkunInfoCard extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.info_outline, size: 18, color: Colors.blue.shade700),
+
           const SizedBox(width: 8),
+
           Expanded(
             child: Text(
               'Anda login sebagai admin. Dapat mengelola semua user.',
