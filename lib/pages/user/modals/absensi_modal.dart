@@ -84,7 +84,6 @@ class _AbsensiModalState extends State<AbsensiModal> {
     return widget.tipe == 'masuk' ? Colors.blue : Colors.orange;
   }
 
-  // ================= METHOD UNTUK SUBMIT ABSENSI (MENGGUNAKAN PROSES ABSENSI) =================
   Future<void> _submitAbsensi() async {
     if (selectedLokasiId == null ||
         selectedLokasiNama == null ||
@@ -92,11 +91,8 @@ class _AbsensiModalState extends State<AbsensiModal> {
       return;
     }
 
-    // MENGGUNAKAN METHOD prosesAbsensi YANG SUDAH ADA DI CONTROLLER
-    // Method ini akan menangani: GPS, cari lokasi terdekat, cek radius, foto, dan kirim ke server
     await lokasiController.prosesAbsensi(widget.tipe);
 
-    // Tutup modal setelah proses absensi selesai
     if (mounted) {
       Get.back();
     }
@@ -113,7 +109,6 @@ class _AbsensiModalState extends State<AbsensiModal> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle drag indicator
           Center(
             child: Container(
               width: 40,
@@ -126,7 +121,6 @@ class _AbsensiModalState extends State<AbsensiModal> {
             ),
           ),
 
-          // Header dengan tombol refresh
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(

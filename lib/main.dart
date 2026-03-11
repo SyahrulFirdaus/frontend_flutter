@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-
 import 'bindings/initial_binding.dart';
 import 'bindings/user_lokasi_binding.dart';
 import 'bindings/lokasi_binding.dart';
@@ -11,7 +10,7 @@ import 'pages/auth/register_page.dart';
 import 'pages/admin/listAkun/list_akun.dart';
 import 'pages/admin/lokasiPage/lokasi_page.dart';
 import 'pages/admin/pusatLokasi/pusat_lokasi_page.dart';
-import 'pages/admin/riwayatSemuaUserPage/riwayat_semua_user_page.dart'; // Tambahkan jika ada
+import 'pages/admin/riwayatSemuaUserPage/riwayat_semua_user_page.dart';
 import 'pages/user/userPage/user_page.dart';
 import 'pages/user/riwayatAbsensiPage/riwayat_absensi_page.dart';
 import 'controllers/auth_controller.dart';
@@ -33,7 +32,6 @@ class MyApp extends StatelessWidget {
       initialBinding: InitialBinding(),
       initialRoute: _getInitialRoute(),
       getPages: [
-        // ===== AUTH ROUTES =====
         GetPage(name: '/login', page: () => LoginPage()),
         GetPage(name: '/register', page: () => RegisterPage()),
 
@@ -52,7 +50,7 @@ class MyApp extends StatelessWidget {
           binding: PusatLokasiBinding(),
         ),
 
-        // Tambahkan route untuk riwayat semua user (jika ada)
+        // Tambahkan route untuk riwayat semua user
         // GetPage(
         //   name: '/admin/riwayat-semua',
         //   page: () => const RiwayatSemuaUserPage(),
@@ -63,7 +61,7 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: '/user',
           page: () => const UserPage(),
-          binding: UserLokasiBinding(), // Binding untuk user
+          binding: UserLokasiBinding(),
         ),
 
         GetPage(name: '/user/riwayat', page: () => const RiwayatAbsensiPage()),

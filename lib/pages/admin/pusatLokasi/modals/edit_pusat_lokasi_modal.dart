@@ -16,7 +16,6 @@ class EditPusatLokasiModal {
     final alamatC = TextEditingController(text: item.keterangan ?? '');
     final formKey = GlobalKey<FormState>();
 
-    // Untuk preview map
     GoogleMapController? mapController;
     LatLng? selectedLocation = item.isKordinatValid
         ? LatLng(item.latitude!, item.longitude!)
@@ -91,7 +90,6 @@ class EditPusatLokasiModal {
                   ),
                   const SizedBox(height: 16),
 
-                  // Form Titik Kordinat dengan tombol pilih lokasi
                   Row(
                     children: [
                       Expanded(

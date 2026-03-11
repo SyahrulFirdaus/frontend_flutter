@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../controllers/pusat_lokasi_controller.dart';
-import 'pilih_lokasi_modal.dart'; // Import modal baru
+import 'pilih_lokasi_modal.dart';
 
 class TambahPusatLokasiModal {
   static void show(BuildContext context, PusatLokasiController controller) {
@@ -11,7 +11,6 @@ class TambahPusatLokasiModal {
     final alamatC = TextEditingController(); // Field baru untuk alamat
     final formKey = GlobalKey<FormState>();
 
-    // Untuk preview map
     GoogleMapController? mapController;
     LatLng? selectedLocation;
 
@@ -89,8 +88,7 @@ class TambahPusatLokasiModal {
                       Expanded(
                         child: TextFormField(
                           controller: titikKordinatC,
-                          readOnly:
-                              true, // Read-only karena akan diisi dari modal
+                          readOnly: true,
                           decoration: InputDecoration(
                             labelText: 'Titik Kordinat *',
                             hintText: 'Pilih lokasi di maps',

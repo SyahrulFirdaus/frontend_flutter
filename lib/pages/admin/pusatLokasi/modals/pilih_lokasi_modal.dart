@@ -24,10 +24,8 @@ class _PilihLokasiModalState extends State<PilihLokasiModal> {
   String selectedAddress = '';
   bool isLoading = false;
 
-  // Controller untuk search
   final TextEditingController searchController = TextEditingController();
 
-  // Lokasi default (Indonesia)
   static const LatLng defaultLocation = LatLng(
     -6.208763,
     106.845599,
@@ -36,7 +34,6 @@ class _PilihLokasiModalState extends State<PilihLokasiModal> {
   @override
   void initState() {
     super.initState();
-    // Set lokasi awal
     if (widget.initialLocation != null) {
       selectedLocation = widget.initialLocation;
       _getAddressFromLatLng(widget.initialLocation!);
@@ -55,7 +52,6 @@ class _PilihLokasiModalState extends State<PilihLokasiModal> {
     super.dispose();
   }
 
-  // Update marker berdasarkan lokasi yang dipilih
   void _updateMarker() {
     if (selectedLocation != null) {
       markers.clear();
@@ -73,14 +69,12 @@ class _PilihLokasiModalState extends State<PilihLokasiModal> {
         ),
       );
 
-      // Pindah kamera ke lokasi baru
       mapController?.animateCamera(
         CameraUpdate.newLatLngZoom(selectedLocation!, 16),
       );
     }
   }
 
-  // Mendapatkan alamat dari koordinat (reverse geocoding)
   Future<void> _getAddressFromLatLng(LatLng position) async {
     try {
       final placemarks = await placemarkFromCoordinates(
@@ -108,7 +102,6 @@ class _PilihLokasiModalState extends State<PilihLokasiModal> {
     }
   }
 
-  // Fungsi search lokasi (menggunakan geocoding)
   Future<void> _searchLocation(String query) async {
     if (query.isEmpty) return;
 

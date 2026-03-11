@@ -26,7 +26,7 @@ class PusatLokasiModel {
     );
   }
 
-  // Helper untuk mendapatkan latitude (angka)
+  // mendapatkan latitude
   double? get latitude {
     try {
       final parts = titikKordinat.split(',');
@@ -39,7 +39,7 @@ class PusatLokasiModel {
     return null;
   }
 
-  // Helper untuk mendapatkan longitude (angka)
+  //  mendapatkan longitude
   double? get longitude {
     try {
       final parts = titikKordinat.split(',');
@@ -52,7 +52,7 @@ class PusatLokasiModel {
     return null;
   }
 
-  // Format koordinat untuk display (dengan 6 desimal)
+  // Format koordinat untuk display
   String get formattedKordinat {
     if (latitude != null && longitude != null) {
       return '${latitude!.toStringAsFixed(6)}, ${longitude!.toStringAsFixed(6)}';

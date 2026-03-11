@@ -8,7 +8,6 @@ class DetailPusatLokasiModal {
   static void show(BuildContext context, PusatLokasiModel item) {
     GoogleMapController? mapController;
 
-    // Cek apakah koordinat valid untuk preview map
     final bool hasValidKoordinat = item.isKordinatValid;
     final LatLng? location = hasValidKoordinat
         ? LatLng(item.latitude!, item.longitude!)
@@ -27,7 +26,6 @@ class DetailPusatLokasiModal {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle drag indicator
             Center(
               child: Container(
                 width: 40,
@@ -40,7 +38,6 @@ class DetailPusatLokasiModal {
               ),
             ),
 
-            // Header dengan icon dan tombol close
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -100,14 +97,13 @@ class DetailPusatLokasiModal {
 
             const Divider(height: 1),
 
-            // Content (scrollable)
+            // Content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nama Lokasi
                     _buildInfoItem(
                       icon: Icons.place,
                       label: 'Nama Lokasi',
@@ -116,7 +112,6 @@ class DetailPusatLokasiModal {
                     ),
                     const SizedBox(height: 16),
 
-                    // Titik Kordinat
                     _buildInfoItem(
                       icon: Icons.location_on,
                       label: 'Titik Kordinat',
@@ -194,7 +189,6 @@ class DetailPusatLokasiModal {
                     ),
                     const SizedBox(height: 16),
 
-                    // Keterangan / Alamat
                     _buildInfoItem(
                       icon: Icons.description,
                       label: 'Keterangan / Alamat',
@@ -204,7 +198,6 @@ class DetailPusatLokasiModal {
 
                     const SizedBox(height: 24),
 
-                    // Preview Map (jika koordinat valid)
                     if (hasValidKoordinat) ...[
                       const Text(
                         'Preview Lokasi',
@@ -257,7 +250,6 @@ class DetailPusatLokasiModal {
                                 compassEnabled: true,
                                 mapToolbarEnabled: false,
                               ),
-                              // Tombol untuk zoom in/out manual
                               Positioned(
                                 top: 10,
                                 right: 10,
@@ -324,7 +316,6 @@ class DetailPusatLokasiModal {
                       ),
                       const SizedBox(height: 16),
 
-                      // Tombol untuk lihat di Google Maps eksternal
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
@@ -387,7 +378,6 @@ class DetailPusatLokasiModal {
 
                     const SizedBox(height: 24),
 
-                    // Metadata (created at & updated at)
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -530,7 +520,6 @@ class DetailPusatLokasiModal {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        // Fallback ke URL biasa
         final fallbackUrl = 'https://www.google.com/maps?q=$lat,$lng';
         final fallbackUri = Uri.parse(fallbackUrl);
         if (await canLaunchUrl(fallbackUri)) {

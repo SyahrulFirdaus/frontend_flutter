@@ -1,11 +1,153 @@
+// import 'package:flutter/material.dart';
+// import 'package:flutter/foundation.dart' show kIsWeb;
+// import 'package:get/get.dart';
+// import '../../../controllers/auth_controller.dart';
+// import '../../../controllers/user_lokasi_controller.dart';
+// import 'widget/user_header_widget.dart';
+// import 'widget/status_card_widget.dart';
+// import 'widget/menu_grid_widget.dart';
+// import 'widget/info_card_widget.dart';
+
+// class UserPage extends StatelessWidget {
+//   const UserPage({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final authController = Get.find<AuthController>();
+
+//     if (!Get.isRegistered<UserLokasiController>()) {
+//       Get.put(UserLokasiController());
+//     }
+
+//     final lokasiController = Get.find<UserLokasiController>();
+
+//     // CEK PLATFORM
+//     final bool isWeb = kIsWeb;
+//     final double maxWidth = isWeb
+//         ? 500
+//         : double.infinity; // Batasi lebar di web
+
+//     return Scaffold(
+//       body: Container(
+//         decoration: BoxDecoration(
+//           gradient: LinearGradient(
+//             begin: Alignment.topCenter,
+//             end: Alignment.bottomCenter,
+//             colors: [Colors.blue.shade700, Colors.blue.shade300, Colors.white],
+//             stops: isWeb
+//                 ? const [0.0, 0.2, 0.4]
+//                 : const [0.0, 0.3, 0.7], // Sesuaikan untuk web
+//           ),
+//         ),
+//         child: SafeArea(
+//           child: Center(
+//             child: Container(
+//               constraints: BoxConstraints(maxWidth: maxWidth),
+//               child: Obx(() {
+//                 final userData = Map<String, dynamic>.from(authController.user);
+
+//                 return Column(
+//                   children: [
+//                     UserHeaderWidget(
+//                       user: userData,
+//                       lokasiController: lokasiController,
+//                       onLogout: () => _showLogoutDialog(authController),
+//                     ),
+//                     const SizedBox(height: 20),
+//                     StatusCardWidget(controller: lokasiController),
+//                     const SizedBox(height: 20),
+//                     Expanded(
+//                       child: Container(
+//                         width: double.infinity,
+//                         decoration: BoxDecoration(
+//                           color: Colors.white,
+//                           borderRadius: const BorderRadius.only(
+//                             topLeft: Radius.circular(30),
+//                             topRight: Radius.circular(30),
+//                           ),
+//                           boxShadow: isWeb
+//                               ? [
+//                                   BoxShadow(
+//                                     color: Colors.grey.withOpacity(0.1),
+//                                     blurRadius: 10,
+//                                     offset: const Offset(0, -2),
+//                                   ),
+//                                 ]
+//                               : null,
+//                         ),
+//                         child: Padding(
+//                           padding: const EdgeInsets.all(20),
+//                           child: Column(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             children: [
+//                               const Text(
+//                                 'Menu Utama',
+//                                 style: TextStyle(
+//                                   fontSize: 18,
+//                                   fontWeight: FontWeight.bold,
+//                                   color: Colors.blue,
+//                                 ),
+//                               ),
+//                               const SizedBox(height: 16),
+//                               Expanded(
+//                                 child: MenuGridWidget(
+//                                   controller: lokasiController,
+//                                   parentContext: context,
+//                                 ),
+//                               ),
+//                               const SizedBox(height: 16),
+//                               const InfoCardWidget(),
+//                               const SizedBox(height: 20),
+//                             ],
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 );
+//               }),
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   void _showLogoutDialog(AuthController authController) {
+//     Get.dialog(
+//       AlertDialog(
+//         title: const Text(
+//           'Konfirmasi Logout',
+//           style: TextStyle(fontWeight: FontWeight.bold),
+//         ),
+//         content: const Text('Apakah Anda yakin ingin keluar?'),
+//         actions: [
+//           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
+//           ElevatedButton(
+//             onPressed: () {
+//               Get.back();
+//               authController.logout();
+//             },
+//             style: ElevatedButton.styleFrom(
+//               backgroundColor: Colors.red,
+//               foregroundColor: Colors.white,
+//             ),
+//             child: const Text('Logout'),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
 import 'package:flutter/material.dart';
+import 'package:frontend_flutter/controllers/auth_controller.dart';
+import 'package:frontend_flutter/controllers/user_lokasi_controller.dart';
+import 'package:frontend_flutter/pages/user/riwayatAbsensiPage/riwayat_absensi_page.dart';
 import 'package:get/get.dart';
-import '../../../controllers/auth_controller.dart';
-import '../../../controllers/user_lokasi_controller.dart';
-import 'widget/user_header_widget.dart';
-import 'widget/status_card_widget.dart';
-import 'widget/menu_grid_widget.dart';
-import 'widget/info_card_widget.dart';
+
+import 'absen_page.dart';
+import 'profil_page.dart';
 
 class UserPage extends StatelessWidget {
   const UserPage({super.key});
@@ -19,239 +161,60 @@ class UserPage extends StatelessWidget {
       Get.put(UserLokasiController());
     }
 
-    final lokasiController = Get.find<UserLokasiController>();
+    // INISIALISASI CONTROLLER UNTUK BOTTOM NAV
+    final bottomNavController = Get.put(UserBottomNavController());
 
-    return Scaffold(
-      body: Obx(() {
-        // TAMPILKAN ERROR JIKA ADA
-        if (lokasiController.errorMessage.isNotEmpty) {
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.blue.shade700, Colors.blue.shade300],
-              ),
-            ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.white, size: 64),
-                    const SizedBox(height: 20),
-                    Text(
-                      lokasiController.errorMessage.value,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        lokasiController.fetchUserLokasi();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.blue,
-                      ),
-                      child: const Text('Coba Lagi'),
-                    ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () => authController.logout(),
-                      child: const Text(
-                        'Logout',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        // TAMPILKAN LOADING MAX 5 DETIK, LALU TAMPILKAN PESAN
-        if (lokasiController.userLokasis.isEmpty) {
-          return FutureBuilder(
-            future: Future.delayed(const Duration(seconds: 1)),
-            builder: (context, snapshot) {
-              // Jika sudah lebih dari 5 detik dan masih loading, tampilkan opsi
-              if (snapshot.connectionState == ConnectionState.done) {
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.blue.shade700, Colors.blue.shade300],
-                    ),
-                  ),
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.timer_off, color: Colors.white, size: 64),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Memuat data terlalu lama',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Periksa koneksi internet Anda',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              lokasiController.fetchUserLokasi();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.blue,
-                            ),
-                            child: const Text('Coba Lagi'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              // Loading normal
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.blue.shade700, Colors.blue.shade300],
-                  ),
-                ),
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(color: Colors.white),
-                      SizedBox(height: 20),
-                      Text(
-                        'Memuat data lokasi...',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        }
-
-        // TAMPILKAN HALAMAN UTAMA
-        final userData = Map<String, dynamic>.from(authController.user);
-
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.blue.shade700,
-                Colors.blue.shade300,
-                Colors.white,
-              ],
-              stops: const [0.0, 0.3, 0.7],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                UserHeaderWidget(
-                  user: userData,
-                  lokasiController: lokasiController,
-                  onLogout: () => _showLogoutDialog(authController),
-                ),
-                const SizedBox(height: 20),
-                StatusCardWidget(controller: lokasiController),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        topRight: Radius.circular(30),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Menu Utama',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: MenuGridWidget(
-                              controller: lokasiController,
-                              parentContext: context,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          const InfoCardWidget(),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }),
+    return Obx(
+      () => Scaffold(
+        body: IndexedStack(
+          index: bottomNavController.currentIndex.value,
+          children: const [AbsenPage(), RiwayatAbsensiPage(), ProfilPage()],
+        ),
+        bottomNavigationBar: _buildBottomNavigationBar(bottomNavController),
+      ),
     );
   }
 
-  void _showLogoutDialog(AuthController authController) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text(
-          'Konfirmasi Logout',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: const Text('Apakah Anda yakin ingin keluar?'),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              authController.logout();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Logout'),
+  Widget _buildBottomNavigationBar(UserBottomNavController controller) {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
+      child: BottomNavigationBar(
+        currentIndex: controller.currentIndex.value,
+        onTap: controller.changePage,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey[400],
+        selectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: TextStyle(fontSize: 12, color: Colors.grey[400]),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fingerprint),
+            label: 'Absen',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+        ],
+      ),
     );
+  }
+}
+
+class UserBottomNavController extends GetxController {
+  var currentIndex = 0.obs;
+
+  void changePage(int index) {
+    currentIndex.value = index;
   }
 }

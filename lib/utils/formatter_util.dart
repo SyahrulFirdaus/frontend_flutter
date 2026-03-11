@@ -1,7 +1,5 @@
-// lib/utils/formatter_util.dart
-
 class FormatterUtil {
-  // Format waktu untuk status card (HH:MM)
+  // Format waktu untuk status card
   static String formatWaktuSimple(String waktuStr) {
     try {
       if (waktuStr.contains('T')) {
@@ -36,7 +34,7 @@ class FormatterUtil {
     }
   }
 
-  // Format tanggal untuk display (DD-MM-YYYY)
+  // Format tanggal
   static String formatTanggal(String tanggalStr) {
     try {
       if (tanggalStr.contains('T')) {
@@ -56,7 +54,7 @@ class FormatterUtil {
     }
   }
 
-  // Format jam dari datetime (HH:MM)
+  // Format jam
   static String formatJam(String waktuStr) {
     try {
       if (waktuStr.contains('T')) {

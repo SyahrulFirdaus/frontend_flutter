@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../../controllers/pusat_lokasi_controller.dart';
 import '../master_drawer.dart';
-// GANTI import
 import 'widgets/pusat_lokasi_table.dart';
 import 'widgets/pusat_lokasi_search_bar.dart';
 
@@ -80,7 +79,7 @@ class PusatLokasiPage extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              // Tabel Data
+              //Tabel Data
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
