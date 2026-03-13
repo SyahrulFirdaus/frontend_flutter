@@ -243,7 +243,7 @@ class PusatLokasiController extends GetxController {
         await fetchPusatLokasi();
 
         Get.snackbar(
-          '✅ Berhasil',
+          'Berhasil',
           'Data pusat lokasi berhasil diupdate',
           backgroundColor: Colors.green,
           colorText: Colors.white,

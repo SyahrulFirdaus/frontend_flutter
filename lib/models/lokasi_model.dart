@@ -1,4 +1,3 @@
-// models/lokasi_model.dart
 class LokasiModel {
   final int id;
   final String user;

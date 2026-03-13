@@ -1,10 +1,7 @@
-// lib/pages/user/widgets/riwayat/riwayat_detail_dialog.dart
-
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/pages/user/riwayatAbsensiPage/utils/riwayat_formatter.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-// Import formatter baru
 
 class RiwayatDetailDialog {
   static const String baseUrl = 'http://192.168.95.243:8000/api';
@@ -160,8 +157,6 @@ class RiwayatDetailDialog {
   }
 }
 
-// ==================== PRIVATE WIDGETS ====================
-
 class _DetailContent extends StatelessWidget {
   final Map<String, dynamic> item;
   final String tipe;
@@ -257,7 +252,6 @@ class _DetailContent extends StatelessWidget {
     LatLng? kamuLatLng;
 
     try {
-      // Parse lokasi
       if (item['lokasi'] != null) {
         if (item['lokasi'] is Map) {
           lokasi = item['lokasi']['lokasi']?.toString() ?? '-';
@@ -273,7 +267,6 @@ class _DetailContent extends StatelessWidget {
     }
 
     try {
-      // Parse titik koordinat lokasi
       if (item['titik_koordinat_lokasi'] != null) {
         koordinatLokasi = item['titik_koordinat_lokasi'].toString();
       }
@@ -297,7 +290,6 @@ class _DetailContent extends StatelessWidget {
     }
 
     try {
-      // Parse titik koordinat kamu
       if (item['titik_koordinat_kamu'] != null &&
           item['titik_koordinat_kamu'].toString().isNotEmpty) {
         koordinatKamu = item['titik_koordinat_kamu'].toString();
@@ -319,7 +311,6 @@ class _DetailContent extends StatelessWidget {
     }
 
     try {
-      // Parse foto wajah
       if (item['foto_wajah'] != null &&
           item['foto_wajah'].toString().isNotEmpty) {
         fotoWajah = item['foto_wajah'].toString();
@@ -329,7 +320,6 @@ class _DetailContent extends StatelessWidget {
     }
 
     try {
-      // Parse waktu absen
       if (item['waktu_absen'] != null) {
         waktu = RiwayatFormatter.formatWaktuLengkap(
           item['waktu_absen'].toString(),

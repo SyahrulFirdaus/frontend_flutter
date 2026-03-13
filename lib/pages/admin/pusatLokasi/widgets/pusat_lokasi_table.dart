@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../../controllers/pusat_lokasi_controller.dart';
 import '../../../../models/pusat_lokasi_model.dart';
 import '../modals/edit_pusat_lokasi_modal.dart';
-import '../modals/detail_pusat_lokasi_modal.dart'; // Import modal detail
+import '../modals/detail_pusat_lokasi_modal.dart';
 
 class PusatLokasiTable extends StatelessWidget {
   final PusatLokasiController controller;
@@ -105,7 +105,6 @@ class PusatLokasiTable extends StatelessWidget {
                 onSelectChanged: controller.isSelectionMode.value
                     ? (selected) => controller.toggleSelectItem(item.id)
                     : (_) {
-                        // KETIKA BARIS DIKLIK (TIDAK DALAM SELECTION MODE)
                         DetailPusatLokasiModal.show(context, item);
                       },
                 cells: [
@@ -117,7 +116,6 @@ class PusatLokasiTable extends StatelessWidget {
                         activeColor: Colors.blue,
                       ),
                     ),
-                  // Kolom No - bisa diklik untuk detail
                   DataCell(
                     InkWell(
                       onTap: () {
@@ -204,7 +202,6 @@ class PusatLokasiTable extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Keterangan
                   DataCell(
                     InkWell(
                       onTap: () {
@@ -223,12 +220,10 @@ class PusatLokasiTable extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Kolom Aksi (Edit & Delete)
                   DataCell(
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Tombol Detail (opsional, karena sudah bisa klik baris)
                         IconButton(
                           icon: Container(
                             padding: const EdgeInsets.all(4),
@@ -270,7 +265,7 @@ class PusatLokasiTable extends StatelessWidget {
                           },
                           tooltip: 'Edit',
                         ),
-                        // Tombol Hapus
+
                         IconButton(
                           icon: Container(
                             padding: const EdgeInsets.all(4),

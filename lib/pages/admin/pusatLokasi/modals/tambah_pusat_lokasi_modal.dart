@@ -8,7 +8,7 @@ class TambahPusatLokasiModal {
   static void show(BuildContext context, PusatLokasiController controller) {
     final namaLokasiC = TextEditingController();
     final titikKordinatC = TextEditingController();
-    final alamatC = TextEditingController(); // Field baru untuk alamat
+    final alamatC = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     GoogleMapController? mapController;
@@ -38,7 +38,6 @@ class TambahPusatLokasiModal {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Handle
                   Center(
                     child: Container(
                       width: 40,
@@ -51,7 +50,6 @@ class TambahPusatLokasiModal {
                   ),
                   const SizedBox(height: 20),
 
-                  // Title
                   const Center(
                     child: Text(
                       'Tambah Pusat Lokasi',
@@ -63,7 +61,6 @@ class TambahPusatLokasiModal {
                   ),
                   const SizedBox(height: 20),
 
-                  // Form Nama Lokasi
                   TextFormField(
                     controller: namaLokasiC,
                     decoration: InputDecoration(
@@ -82,7 +79,6 @@ class TambahPusatLokasiModal {
                   ),
                   const SizedBox(height: 16),
 
-                  // Form Titik Kordinat dengan tombol pilih lokasi
                   Row(
                     children: [
                       Expanded(
@@ -119,17 +115,14 @@ class TambahPusatLokasiModal {
                         child: IconButton(
                           icon: const Icon(Icons.map, color: Colors.white),
                           onPressed: () async {
-                            // Buka modal pilih lokasi
                             final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => PilihLokasiModal(
                                   onLocationPicked: (koordinat, alamat) {
-                                    // Isi form dengan hasil dari modal
                                     titikKordinatC.text = koordinat;
                                     alamatC.text = alamat;
 
-                                    // Parse untuk preview map
                                     try {
                                       final parts = koordinat.split(',');
                                       if (parts.length == 2) {
@@ -159,7 +152,6 @@ class TambahPusatLokasiModal {
 
                   const SizedBox(height: 16),
 
-                  // Preview Map (jika koordinat sudah dipilih)
                   if (selectedLocation != null) ...[
                     const Text(
                       'Preview Lokasi',
@@ -208,7 +200,6 @@ class TambahPusatLokasiModal {
                     const SizedBox(height: 16),
                   ],
 
-                  // Form Alamat Lengkap (field baru)
                   TextFormField(
                     controller: alamatC,
                     maxLines: 2,
@@ -227,10 +218,8 @@ class TambahPusatLokasiModal {
                   ),
                   const SizedBox(height: 16),
 
-                  // Form Keterangan (opsional)
                   TextFormField(
-                    controller:
-                        alamatC, // Bisa diganti dengan field keterangan terpisah
+                    controller: alamatC,
                     maxLines: 2,
                     decoration: InputDecoration(
                       labelText: 'Keterangan (Opsional)',

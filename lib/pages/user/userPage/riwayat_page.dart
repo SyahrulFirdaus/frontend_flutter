@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:frontend_flutter/controllers/auth_controller.dart';
 import 'package:frontend_flutter/controllers/user_lokasi_controller.dart';
 import 'package:get/get.dart';
-
 import 'riwayat_list_widget.dart';
 
 class RiwayatPage extends StatelessWidget {

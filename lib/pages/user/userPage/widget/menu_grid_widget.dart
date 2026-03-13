@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:get/get.dart';
 import '../../../../controllers/user_lokasi_controller.dart';
-import '../../modals/daftar_lokasi_modal.dart';
 
 class MenuGridWidget extends StatelessWidget {
   final UserLokasiController controller;
@@ -20,14 +19,13 @@ class MenuGridWidget extends StatelessWidget {
 
     return Column(
       children: [
-        // GRID UNTUK 2 MENU (MASUK & PULANG) - LEBIH KECIL
         SizedBox(
-          height: 130, // TINGGI FIX UNTUK GRID
+          height: 130,
           child: GridView.count(
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.2, // ASPEK RATIO LEBIH LANDAI
+            childAspectRatio: 1.2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
@@ -111,12 +109,10 @@ class MenuGridWidget extends StatelessWidget {
       return GestureDetector(
         onTap: isDisabled || isSubmitting ? null : onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            vertical: 8,
-          ), // PADDING LEBIH KECIL
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isDisabled ? Colors.grey[100] : Colors.white,
-            borderRadius: BorderRadius.circular(14), // RADIUS LEBIH KECIL
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isDisabled ? Colors.grey[300]! : Colors.grey[200]!,
               width: 1,
@@ -152,7 +148,7 @@ class MenuGridWidget extends StatelessWidget {
                         child: Icon(
                           icon,
                           color: isDisabled ? Colors.grey[400] : color,
-                          size: 20, // ICON LEBIH KECIL
+                          size: 20,
                         ),
                       ),
                       if (isSubmitting && !isDisabled)
@@ -169,11 +165,11 @@ class MenuGridWidget extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 4), // JARAK LEBIH KECIL
+                  const SizedBox(height: 4),
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: 12, // FONT LEBIH KECIL
+                      fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: isDisabled ? Colors.grey[500] : Colors.grey[800],
                     ),
@@ -192,7 +188,7 @@ class MenuGridWidget extends StatelessWidget {
                       child: Text(
                         badge,
                         style: TextStyle(
-                          fontSize: 8, // FONT BADGE LEBIH KECIL
+                          fontSize: 8,
                           color: Colors.green[600],
                           fontWeight: FontWeight.w600,
                         ),

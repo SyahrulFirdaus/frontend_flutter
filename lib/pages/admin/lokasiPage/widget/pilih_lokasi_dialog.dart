@@ -1,5 +1,3 @@
-// lib/pages/admin/widgets/lokasi/pilih_lokasi_dialog.dart
-
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -228,8 +226,7 @@ class PilihLokasiController extends GetxController {
   void onInit() {
     super.onInit();
     selectedLocation.value =
-        initialLocation ??
-        const LatLng(-6.200000, 106.816666); // Default Jakarta
+        initialLocation ?? const LatLng(-6.200000, 106.816666);
 
     if (initialAddress != null && initialAddress!.isNotEmpty) {
       searchController.text = initialAddress!;

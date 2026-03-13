@@ -1,5 +1,3 @@
-// lib/pages/admin/widgets/admin_riwayat/admin_absensi_card_widget.dart
-
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/pages/admin/riwayatSemuaUserPage/modals/admin_delete_confirmation.dart';
 import 'admin_formatter.dart';
@@ -26,7 +24,6 @@ class AdminAbsensiCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ambil ID absensi untuk keperluan hapus
     int? idMasuk = dataMasuk?['id'];
     int? idPulang = dataPulang?['id'];
 
@@ -41,7 +38,6 @@ class AdminAbsensiCardWidget extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // Nomor urut
               Container(
                 width: 36,
                 height: 36,
@@ -66,12 +62,10 @@ class AdminAbsensiCardWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
 
-              // Konten utama
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Tanggal dan Lokasi
                     Row(
                       children: [
                         Text(
@@ -104,7 +98,6 @@ class AdminAbsensiCardWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
 
-                    // Status Masuk
                     Row(
                       children: [
                         Container(
@@ -146,7 +139,6 @@ class AdminAbsensiCardWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
 
-                    // Status Pulang
                     Row(
                       children: [
                         Container(
@@ -190,7 +182,6 @@ class AdminAbsensiCardWidget extends StatelessWidget {
                 ),
               ),
 
-              // Tombol Hapus
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, color: Colors.grey),
                 onSelected: (value) {

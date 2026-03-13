@@ -1,5 +1,3 @@
-// lib/pages/admin/modals/delete_user_confirmation.dart
-
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/controllers/user_controller.dart';
 import 'package:get/get.dart';

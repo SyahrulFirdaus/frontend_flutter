@@ -71,15 +71,12 @@ class PusatLokasiPage extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // Header
               _buildHeader(controller),
 
-              // Search Bar
               const PusatLokasiSearchBar(),
 
               const SizedBox(height: 8),
 
-              //Tabel Data
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -198,7 +195,6 @@ class PusatLokasiPage extends StatelessWidget {
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {
-              // PAKSA PAKAI MODAL SEDERHANA
               TambahPusatLokasiModal.show(context, controller);
             },
             icon: const Icon(Icons.add_location),

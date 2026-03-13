@@ -1,5 +1,3 @@
-// lib/pages/admin/riwayat_semua_user_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/controllers/admin_absensi_controller.dart';
 import 'package:frontend_flutter/controllers/auth_controller.dart';
@@ -19,7 +17,6 @@ class RiwayatSemuaUserPage extends StatelessWidget {
     final controller = Get.put(AdminAbsensiController());
     final auth = Get.find<AuthController>();
 
-    // Panggil data saat halaman dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.fetchAllUsers();
       controller.fetchAllAbsensi();
@@ -90,11 +87,9 @@ class RiwayatSemuaUserPage extends StatelessWidget {
 
         return Column(
           children: [
-            // Filter Section
             AdminFilterWidget(controller: controller),
             const Divider(height: 1),
 
-            // Summary Card
             AdminSummaryWidget(
               totalUser: controller.semuaUsers.length,
               totalAbsensi: controller.semuaAbsensi.length,
@@ -102,7 +97,6 @@ class RiwayatSemuaUserPage extends StatelessWidget {
             ),
             const Divider(height: 1),
 
-            // List Absensi (Group by User & Date)
             Expanded(child: _buildAbsensiList(controller)),
           ],
         );
@@ -111,7 +105,6 @@ class RiwayatSemuaUserPage extends StatelessWidget {
   }
 
   Widget _buildAbsensiList(AdminAbsensiController controller) {
-    // Group data by user and date menggunakan formatter
     final groupedData = AdminFormatter.groupByUserAndDate(
       controller.semuaAbsensi,
       (userId) => controller.getUserNameById(userId),
@@ -129,14 +122,11 @@ class RiwayatSemuaUserPage extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header User
             AdminUserHeaderWidget(userName: userName, totalDays: dates.length),
 
-            // List absensi per user
             ...dates.map((tanggal) {
               final items = userDates[tanggal]!;
 
-              // Cari data masuk dan pulang
               Map<String, dynamic>? dataMasuk;
               Map<String, dynamic>? dataPulang;
 
@@ -156,7 +146,6 @@ class RiwayatSemuaUserPage extends StatelessWidget {
                 dataPulang = null;
               }
 
-              // Ambil lokasi dari item pertama
               String lokasi = '';
               if (items.isNotEmpty && items.first['lokasi'] != null) {
                 if (items.first['lokasi'] is Map) {

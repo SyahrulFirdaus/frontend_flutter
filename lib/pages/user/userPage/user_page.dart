@@ -3,7 +3,6 @@ import 'package:frontend_flutter/controllers/auth_controller.dart';
 import 'package:frontend_flutter/controllers/user_lokasi_controller.dart';
 import 'package:frontend_flutter/pages/user/riwayatAbsensiPage/riwayat_absensi_page.dart';
 import 'package:get/get.dart';
-
 import 'absen_page.dart';
 import 'profil_page.dart';
 
@@ -14,12 +13,10 @@ class UserPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
 
-    // PASTIKAN CONTROLLER TERDAFTAR
     if (!Get.isRegistered<UserLokasiController>()) {
       Get.put(UserLokasiController());
     }
 
-    // INISIALISASI CONTROLLER UNTUK BOTTOM NAV
     final bottomNavController = Get.put(UserBottomNavController());
 
     return Obx(

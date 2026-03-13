@@ -1,5 +1,3 @@
-// lib/pages/admin/modals/admin_delete_confirmation.dart
-
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/controllers/admin_absensi_controller.dart';
 import 'package:get/get.dart';
@@ -32,7 +30,7 @@ class AdminDeleteConfirmation {
           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
-              Get.back(); // Tutup dialog konfirmasi
+              Get.back();
 
               bool success = false;
               if (tipe == 'masuk') {
@@ -40,7 +38,6 @@ class AdminDeleteConfirmation {
               } else if (tipe == 'pulang') {
                 success = await controller.deleteAbsensi(id);
               } else if (tipe == 'semua' && idPulang != null) {
-                // Hapus masuk dulu, lalu pulang
                 bool success1 = await controller.deleteAbsensi(id);
                 bool success2 = await controller.deleteAbsensi(idPulang);
                 success = success1 && success2;
@@ -55,7 +52,7 @@ class AdminDeleteConfirmation {
                   snackPosition: SnackPosition.TOP,
                   duration: const Duration(seconds: 2),
                 );
-                controller.fetchAllAbsensi(); // Refresh data
+                controller.fetchAllAbsensi();
               } else {
                 Get.snackbar(
                   'Error',

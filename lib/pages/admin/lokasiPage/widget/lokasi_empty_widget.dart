@@ -1,5 +1,3 @@
-// lib/pages/admin/widgets/lokasi/lokasi_empty_widget.dart
-
 import 'package:flutter/material.dart';
 
 class LokasiEmptyWidget extends StatelessWidget {

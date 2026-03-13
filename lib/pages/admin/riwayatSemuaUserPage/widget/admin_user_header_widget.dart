@@ -1,5 +1,3 @@
-// lib/pages/admin/widgets/admin_riwayat/admin_user_header_widget.dart
-
 import 'package:flutter/material.dart';
 
 class AdminUserHeaderWidget extends StatelessWidget {

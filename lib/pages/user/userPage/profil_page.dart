@@ -3,8 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:frontend_flutter/controllers/auth_controller.dart';
 import 'package:frontend_flutter/controllers/user_lokasi_controller.dart';
 import 'package:get/get.dart';
-
-import '../modals/daftar_lokasi_modal.dart'; // IMPORT MODAL DAFTAR LOKASI
+import '../modals/daftar_lokasi_modal.dart';
 
 class ProfilPage extends StatelessWidget {
   const ProfilPage({super.key});
@@ -193,14 +192,12 @@ class ProfilPage extends StatelessWidget {
     );
   }
 
-  // PERBAIKAN: Fungsi ini sekarang membuka modal daftar lokasi
   Widget _buildLocationInfo(
     UserLokasiController controller,
     BuildContext context,
   ) {
     return GestureDetector(
       onTap: () {
-        // BUKA MODAL DAFTAR LOKASI KETIKA DIKLIK
         if (controller.userLokasis.isNotEmpty) {
           DaftarLokasiModal.show(context, controller);
         } else {
@@ -250,7 +247,6 @@ class ProfilPage extends StatelessWidget {
                       ),
                     );
                   }),
-                  // TAMBAHKAN INDIKATOR LOKASI TERDEKAT (OPSIONAL)
                   Obx(() {
                     if (controller.lokasiTerpilih.value == null) {
                       return const SizedBox.shrink();

@@ -62,7 +62,6 @@ class UserController extends GetxController {
     }
   }
 
-  // Register user
   Future<void> registerUser({
     required String name,
     required String email,

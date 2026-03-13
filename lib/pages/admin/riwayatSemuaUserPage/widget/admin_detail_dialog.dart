@@ -1,5 +1,3 @@
-// lib/pages/admin/widgets/admin_riwayat/admin_detail_dialog.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -159,8 +157,6 @@ class AdminDetailDialog {
     );
   }
 }
-
-// ==================== PRIVATE WIDGETS ====================
 
 class _DetailContent extends StatelessWidget {
   final Map<String, dynamic> item;

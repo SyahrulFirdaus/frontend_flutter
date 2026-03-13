@@ -1,5 +1,3 @@
-// lib/pages/admin/widgets/admin_riwayat/admin_summary_widget.dart
-
 import 'package:flutter/material.dart';
 
 class AdminSummaryWidget extends StatelessWidget {

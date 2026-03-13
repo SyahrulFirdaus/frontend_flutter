@@ -1,5 +1,3 @@
-// lib/pages/admin/modals/tambah_user_modal.dart
-
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/controllers/user_controller.dart';
 import 'package:get/get.dart';
@@ -278,10 +276,8 @@ class TambahUserModal {
       return;
     }
 
-    // Tutup bottom sheet
     Get.back();
 
-    // Tampilkan dialog konfirmasi
     Get.dialog(
       AlertDialog(
         title: const Text(

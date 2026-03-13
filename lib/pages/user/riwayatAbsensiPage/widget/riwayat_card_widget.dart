@@ -1,5 +1,3 @@
-// lib/pages/user/widgets/riwayat/riwayat_card_widget.dart
-
 import 'package:flutter/material.dart';
 import '../../../../utils/formatter_util.dart';
 
@@ -72,7 +70,6 @@ class RiwayatCardWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Tanggal
         Text(
           FormatterUtil.formatTanggal(tanggal),
           style: const TextStyle(
@@ -83,7 +80,6 @@ class RiwayatCardWidget extends StatelessWidget {
         ),
         const SizedBox(height: 8),
 
-        // Status Masuk
         Row(
           children: [
             Container(
@@ -118,7 +114,6 @@ class RiwayatCardWidget extends StatelessWidget {
         ),
         const SizedBox(height: 4),
 
-        // Status Pulang
         Row(
           children: [
             Container(

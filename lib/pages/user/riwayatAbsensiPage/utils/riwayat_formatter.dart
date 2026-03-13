@@ -1,12 +1,10 @@
-// lib/pages/user/widgets/riwayat/riwayat_formatter.dart
-
 class RiwayatFormatter {
   // Format tanggal dari YYYY-MM-DD ke DD-MM-YYYY
   static String formatTanggal(String tanggal) {
     try {
       final parts = tanggal.split('-');
       if (parts.length == 3) {
-        return '${parts[2]}-${parts[1]}-${parts[0]}'; // DD-MM-YYYY
+        return '${parts[2]}-${parts[1]}-${parts[0]}';
       }
       return tanggal;
     } catch (e) {

@@ -63,7 +63,6 @@ class ListAkunPage extends GetView<AuthController> {
           );
         }
 
-        // Hitung jumlah admin dan user
         final int totalUsers = userController.users.length;
         final int totalAdmins = userController.users
             .where((u) => u.role == 'admin')
@@ -83,14 +82,12 @@ class ListAkunPage extends GetView<AuthController> {
           child: SafeArea(
             child: Column(
               children: [
-                // Header dengan statistik
                 AkunHeaderWidget(
                   totalUsers: totalUsers,
                   totalAdmins: totalAdmins,
                   totalRegularUsers: totalRegularUsers,
                 ),
 
-                // Tabel Data User
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -109,7 +106,6 @@ class ListAkunPage extends GetView<AuthController> {
                   ),
                 ),
 
-                // Tombol Aksi dan Info Card
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(

@@ -100,17 +100,16 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Absensi App',
       debugShowCheckedModeBanner: false,
-      initialBinding: InitialBinding(), // MENDAFTARKAN AUTH CONTROLLER
-      initialRoute: '/', // RUTE AWAL ADALAH SPLASH SCREEN
+      initialBinding: InitialBinding(),
+      initialRoute: '/',
       getPages: [
-        // ===== SPLASH SCREEN =====
         GetPage(name: '/', page: () => const SplashPage()),
 
-        // ===== AUTH ROUTES =====
+        // rute auth
         GetPage(name: '/login', page: () => LoginPage()),
         GetPage(name: '/register', page: () => RegisterPage()),
 
-        // ===== ADMIN ROUTES =====
+        // rute admin
         GetPage(name: '/admin', page: () => const ListAkunPage()),
 
         GetPage(
@@ -125,7 +124,7 @@ class MyApp extends StatelessWidget {
           binding: PusatLokasiBinding(),
         ),
 
-        // ===== USER ROUTES =====
+        // untuk user
         GetPage(
           name: '/user',
           page: () => const UserPage(),
