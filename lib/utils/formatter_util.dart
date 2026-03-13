@@ -1,5 +1,4 @@
 class FormatterUtil {
-  // Format waktu untuk status card
   static String formatWaktuSimple(String waktuStr) {
     try {
       if (waktuStr.contains('T')) {

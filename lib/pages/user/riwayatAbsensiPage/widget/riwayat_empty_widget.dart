@@ -1,5 +1,3 @@
-// lib/pages/user/widgets/riwayat/riwayat_empty_widget.dart
-
 import 'package:flutter/material.dart';
 
 class RiwayatEmptyWidget extends StatelessWidget {

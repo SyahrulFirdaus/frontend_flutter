@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_flutter/pages/splash_pages.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'bindings/initial_binding.dart';
@@ -21,6 +22,76 @@ void main() async {
   runApp(const MyApp());
 }
 
+// class MyApp extends StatelessWidget {
+//   const MyApp({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return GetMaterialApp(
+//       title: 'Absensi App',
+//       debugShowCheckedModeBanner: false,
+//       initialBinding: InitialBinding(),
+//       initialRoute: _getInitialRoute(),
+//       getPages: [
+//         GetPage(name: '/', page: () => const SplashPage()),
+
+//         GetPage(name: '/login', page: () => LoginPage()),
+//         GetPage(name: '/register', page: () => RegisterPage()),
+
+//         // ===== ADMIN ROUTES =====
+//         GetPage(name: '/admin', page: () => const ListAkunPage()),
+
+//         GetPage(
+//           name: '/admin/lokasi',
+//           page: () => LokasiPage(),
+//           binding: LokasiBinding(),
+//         ),
+
+//         GetPage(
+//           name: '/admin/pusat-lokasi',
+//           page: () => const PusatLokasiPage(),
+//           binding: PusatLokasiBinding(),
+//         ),
+
+//         // Tambahkan route untuk  riwayat semua user
+//         // GetPage(
+//         //   name: '/admin/riwayat-semua',
+//         //   page: () => const RiwayatSemuaUserPage(),
+//         //   binding: AdminAbsensiBinding(),
+//         // ),
+
+//         // ===== USER ROUTES =====
+//         GetPage(
+//           name: '/user',
+//           page: () => const UserPage(),
+//           binding: UserLokasiBinding(),
+//         ),
+
+//         GetPage(name: '/user/riwayat', page: () => const RiwayatAbsensiPage()),
+//       ],
+//     );
+//   }
+
+//   String _getInitialRoute() {
+//     // Cek apakah AuthController sudah terdaftar
+//     if (Get.isRegistered<AuthController>()) {
+//       final auth = Get.find<AuthController>();
+
+//       // Jika sudah login
+//       if (auth.isLoggedIn) {
+//         // Redirect sesuai role
+//         if (auth.isAdmin) {
+//           return '/admin';
+//         } else {
+//           return '/user';
+//         }
+//       }
+//     }
+//     // Jika belum login
+//     return '/login';
+//   }
+// }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -29,9 +100,13 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Absensi App',
       debugShowCheckedModeBanner: false,
-      initialBinding: InitialBinding(),
-      initialRoute: _getInitialRoute(),
+      initialBinding: InitialBinding(), // MENDAFTARKAN AUTH CONTROLLER
+      initialRoute: '/', // RUTE AWAL ADALAH SPLASH SCREEN
       getPages: [
+        // ===== SPLASH SCREEN =====
+        GetPage(name: '/', page: () => const SplashPage()),
+
+        // ===== AUTH ROUTES =====
         GetPage(name: '/login', page: () => LoginPage()),
         GetPage(name: '/register', page: () => RegisterPage()),
 
@@ -50,13 +125,6 @@ class MyApp extends StatelessWidget {
           binding: PusatLokasiBinding(),
         ),
 
-        // Tambahkan route untuk riwayat semua user
-        // GetPage(
-        //   name: '/admin/riwayat-semua',
-        //   page: () => const RiwayatSemuaUserPage(),
-        //   binding: AdminAbsensiBinding(),
-        // ),
-
         // ===== USER ROUTES =====
         GetPage(
           name: '/user',
@@ -67,24 +135,5 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/user/riwayat', page: () => const RiwayatAbsensiPage()),
       ],
     );
-  }
-
-  String _getInitialRoute() {
-    // Cek apakah AuthController sudah terdaftar
-    if (Get.isRegistered<AuthController>()) {
-      final auth = Get.find<AuthController>();
-
-      // Jika sudah login
-      if (auth.isLoggedIn) {
-        // Redirect sesuai role
-        if (auth.isAdmin) {
-          return '/admin';
-        } else {
-          return '/user';
-        }
-      }
-    }
-    // Jika belum login
-    return '/login';
   }
 }

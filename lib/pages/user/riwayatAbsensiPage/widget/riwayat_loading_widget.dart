@@ -1,5 +1,3 @@
-// lib/pages/user/widgets/riwayat/riwayat_loading_widget.dart
-
 import 'package:flutter/material.dart';
 
 class RiwayatLoadingWidget extends StatelessWidget {

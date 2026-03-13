@@ -1,5 +1,3 @@
-// lib/controllers/admin_absensi_controller.dart
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -20,16 +18,13 @@ class AdminAbsensiController extends GetxController {
   var isLoadingUsers = false.obs;
   var errorMessage = ''.obs;
 
-  // Filter
   var selectedUserId = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
-    print('🟢 AdminAbsensiController diinisialisasi');
   }
 
-  // ================= AMBIL SEMUA USER =================
   Future<void> fetchAllUsers() async {
     if (auth.token.isEmpty) {
       errorMessage.value = 'Token tidak ditemukan';
@@ -39,7 +34,7 @@ class AdminAbsensiController extends GetxController {
     isLoadingUsers.value = true;
 
     try {
-      print('📌 Fetching all users...');
+      print('Fetching all users');
 
       final response = await http
           .get(
@@ -51,13 +46,13 @@ class AdminAbsensiController extends GetxController {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('📨 Response users: ${response.statusCode}');
+      print('Response users: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['data'] is List) {
           semuaUsers.value = List<Map<String, dynamic>>.from(data['data']);
-          print('✅ Users: ${semuaUsers.length} data');
+          print('Users: ${semuaUsers.length} data');
         } else {
           semuaUsers.value = [];
         }
@@ -72,18 +67,17 @@ class AdminAbsensiController extends GetxController {
         );
         Future.delayed(const Duration(seconds: 2), () => auth.logout());
       } else {
-        print('❌ Error fetch users: ${response.statusCode}');
+        print('Error fetch users: ${response.statusCode}');
         errorMessage.value = 'Gagal memuat data users';
       }
     } catch (e) {
-      print('❌ Error fetch users: $e');
+      print('Error fetch users: $e');
       errorMessage.value = 'Gagal memuat data users';
     } finally {
       isLoadingUsers.value = false;
     }
   }
 
-  // ================= AMBIL SEMUA ABSENSI =================
   Future<void> fetchAllAbsensi() async {
     if (auth.token.isEmpty) {
       errorMessage.value = 'Token tidak ditemukan';
@@ -94,16 +88,15 @@ class AdminAbsensiController extends GetxController {
     errorMessage.value = '';
 
     try {
-      print('📌 Fetching all absensi...');
+      print('Fetching all absensi');
 
-      // Build URL dengan filter user (opsional)
       String url = '$baseUrl/admin/absensi/all';
 
       if (selectedUserId.value.isNotEmpty) {
         url = '$url?user_id=${selectedUserId.value}';
       }
 
-      print('📌 URL: $url');
+      print('URL: $url');
 
       final response = await http
           .get(
@@ -115,14 +108,14 @@ class AdminAbsensiController extends GetxController {
           )
           .timeout(const Duration(seconds: 15));
 
-      print('📨 Response absensi: ${response.statusCode}');
-      print('📨 Response body: ${response.body}');
+      print('Response absensi: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['data'] is List) {
           semuaAbsensi.value = List<Map<String, dynamic>>.from(data['data']);
-          print('✅ Absensi: ${semuaAbsensi.length} data');
+          print('Absensi: ${semuaAbsensi.length} data');
         } else {
           semuaAbsensi.value = [];
         }
@@ -138,17 +131,16 @@ class AdminAbsensiController extends GetxController {
         Future.delayed(const Duration(seconds: 2), () => auth.logout());
       } else {
         errorMessage.value = 'Error ${response.statusCode}';
-        print('❌ Error fetch absensi: ${response.statusCode}');
+        print('Error fetch absensi: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Error fetch absensi: $e');
+      print('Error fetch absensi: $e');
       errorMessage.value = 'Gagal memuat data absensi';
     } finally {
       isLoading.value = false;
     }
   }
 
-  // ================= DELETE ABSENSI =================
   Future<bool> deleteAbsensi(int id) async {
     if (auth.token.isEmpty) {
       Get.snackbar(
@@ -162,7 +154,7 @@ class AdminAbsensiController extends GetxController {
     }
 
     try {
-      print('📌 Deleting absensi ID: $id');
+      print('Deleting absensi ID: $id');
 
       final response = await http
           .delete(
@@ -174,11 +166,11 @@ class AdminAbsensiController extends GetxController {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('📨 Response delete: ${response.statusCode}');
-      print('📨 Response body: ${response.body}');
+      print('Response delete: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        print('✅ Absensi berhasil dihapus');
+        print('Absensi berhasil dihapus');
         return true;
       } else if (response.statusCode == 401) {
         Get.snackbar(
@@ -212,7 +204,7 @@ class AdminAbsensiController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('❌ Error delete absensi: $e');
+      print('Error delete absensi: $e');
       Get.snackbar(
         'Error',
         'Koneksi error: ${e.toString()}',
@@ -224,19 +216,16 @@ class AdminAbsensiController extends GetxController {
     }
   }
 
-  // ================= FILTER BERDASARKAN USER =================
   void filterByUser(String userId) {
     selectedUserId.value = userId;
     fetchAllAbsensi();
   }
 
-  // ================= RESET FILTER =================
   void resetFilter() {
     selectedUserId.value = '';
-    fetchAllAbsensi(); // Ambil semua data tanpa filter
+    fetchAllAbsensi();
   }
 
-  // ================= GET USER NAME BY ID =================
   String getUserNameById(int userId) {
     try {
       final user = semuaUsers.firstWhere(
@@ -250,7 +239,6 @@ class AdminAbsensiController extends GetxController {
     }
   }
 
-  // ================= FORMAT WAKTU =================
   String formatWaktu(String waktuStr) {
     try {
       if (waktuStr.isEmpty) return '-';
@@ -306,7 +294,6 @@ class AdminAbsensiController extends GetxController {
     }
   }
 
-  // ================= HITUNG UNIQUE DATES =================
   int getUniqueDatesCount() {
     try {
       Set<String> dates = {};
@@ -327,7 +314,6 @@ class AdminAbsensiController extends GetxController {
     }
   }
 
-  // ================= RESET =================
   void reset() {
     semuaAbsensi.clear();
     semuaUsers.clear();
@@ -337,10 +323,9 @@ class AdminAbsensiController extends GetxController {
     selectedUserId.value = '';
   }
 
-  // ================= DEBUG =================
   void printDebugInfo() {
     print('=' * 50);
-    print('📊 ADMIN ABSENSI CONTROLLER');
+    print('ADMIN ABSENSI CONTROLLER');
     print('Token: ${auth.token.isNotEmpty ? "Ada" : "Kosong"}');
     print('Total Users: ${semuaUsers.length}');
     print('Total Absensi: ${semuaAbsensi.length}');

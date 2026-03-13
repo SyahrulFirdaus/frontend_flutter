@@ -26,7 +26,6 @@ class PusatLokasiModel {
     );
   }
 
-  // mendapatkan latitude
   double? get latitude {
     try {
       final parts = titikKordinat.split(',');
@@ -39,7 +38,6 @@ class PusatLokasiModel {
     return null;
   }
 
-  //  mendapatkan longitude
   double? get longitude {
     try {
       final parts = titikKordinat.split(',');
@@ -52,7 +50,6 @@ class PusatLokasiModel {
     return null;
   }
 
-  // Format koordinat untuk display
   String get formattedKordinat {
     if (latitude != null && longitude != null) {
       return '${latitude!.toStringAsFixed(6)}, ${longitude!.toStringAsFixed(6)}';
@@ -60,12 +57,10 @@ class PusatLokasiModel {
     return titikKordinat;
   }
 
-  // Apakah koordinat valid?
   bool get isKordinatValid {
     return latitude != null && longitude != null;
   }
 
-  // Untuk keperluan debugging
   @override
   String toString() {
     return 'PusatLokasi{id: $id, nama: $namaLokasi, kordinat: $titikKordinat}';

@@ -26,7 +26,7 @@ class _LokasiPageState extends State<LokasiPage> {
     super.initState();
 
     controller = Get.put(LokasiController());
-    print('🟢 LokasiPage initialized with controller');
+    print('LokasiPage initialized with controller');
   }
 
   @override

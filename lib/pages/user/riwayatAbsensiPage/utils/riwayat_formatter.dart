@@ -100,15 +100,32 @@ class RiwayatFormatter {
   }
 
   // Mendapatkan URL foto lengkap
-  static String getFullImageUrl(String path, String baseUrl) {
+  // static String getFullImageUrl(String path, String baseUrl) {
+  //   if (path.isEmpty) return '';
+
+  //   if (path.startsWith('http')) {
+  //     if (path.contains('localhost')) {
+  //       return path.replaceFirst(
+  //         'localhost',
+  //         baseUrl.replaceAll('http://', ''),
+  //       );
+  //     }
+  //     return path;
+  //   }
+  //   if (path.startsWith('/storage')) {
+  //     return baseUrl + path;
+  //   }
+  //   return baseUrl + '/storage/foto_absensi/' + path;
+  // }
+
+  static getFullImageUrl(String path, String baseUrl) {
     if (path.isEmpty) return '';
 
     if (path.startsWith('http')) {
       if (path.contains('localhost')) {
-        return path.replaceFirst(
-          'localhost',
-          baseUrl.replaceAll('http://', ''),
-        );
+        // return path.replaceFirst('localhost', '192.168.1.9:8000');
+        return path.replaceFirst('localhost', '192.168.95.243:8000');
+        // return path.replaceFirst('localhost', '10.0.2.2:8000');
       }
       return path;
     }
