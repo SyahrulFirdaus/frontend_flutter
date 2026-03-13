@@ -8,9 +8,9 @@ import 'auth_controller.dart';
 class AdminAbsensiController extends GetxController {
   final auth = Get.find<AuthController>();
 
-  final String baseUrl = 'http://192.168.95.243:8000/api';
+  // final String baseUrl = 'http://192.168.95.243:8000/api';
   // final String baseUrl = 'http://192.168.137.1:8000/api';
-  // final String baseUrl = 'http://10.0.2.2:8000/api';
+  final String baseUrl = 'http://10.0.2.2:8000/api';
 
   var semuaAbsensi = <Map<String, dynamic>>[].obs;
   var semuaUsers = <Map<String, dynamic>>[].obs;

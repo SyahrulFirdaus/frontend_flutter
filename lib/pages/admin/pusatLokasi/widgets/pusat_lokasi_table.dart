@@ -13,6 +13,22 @@ class PusatLokasiTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      // ========== DEBUGGING ==========
+      print('🔄 Building PusatLokasiTable');
+      print('   - isLoading: ${controller.isLoading.value}');
+      print('   - data count: ${controller.filteredLokasis.length}');
+      print('   - error: ${controller.errorMessage.value}');
+
+      // FALLBACK: Jika data sudah ada tapi loading masih true, tampilkan data
+      if (controller.isLoading.value && controller.filteredLokasis.isNotEmpty) {
+        print(
+          '⚠️ WARNING: isLoading true tapi data sudah ada! Memaksa tampilkan data...',
+        );
+        // LANGSUNG TAMPILKAN DATA
+        return _buildDataTable(context);
+      }
+
+      // LOADING STATE
       if (controller.isLoading.value) {
         return const Center(
           child: Column(
@@ -26,6 +42,7 @@ class PusatLokasiTable extends StatelessWidget {
         );
       }
 
+      // ERROR STATE
       if (controller.errorMessage.isNotEmpty) {
         return Center(
           child: Padding(
@@ -51,6 +68,7 @@ class PusatLokasiTable extends StatelessWidget {
         );
       }
 
+      // EMPTY STATE
       if (controller.filteredLokasis.isEmpty) {
         return Center(
           child: Column(
@@ -75,225 +93,231 @@ class PusatLokasiTable extends StatelessWidget {
         );
       }
 
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: DataTable(
-            headingRowColor: MaterialStateProperty.all(Colors.blue.shade50),
-            headingTextStyle: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue.shade700,
-            ),
-            columnSpacing: 20,
-            horizontalMargin: 16,
-            columns: [
-              if (controller.isSelectionMode.value)
-                const DataColumn(label: Text('Pilih')),
-              const DataColumn(label: Text('No')),
-              const DataColumn(label: Text('Nama Lokasi')),
-              const DataColumn(label: Text('Titik Kordinat')),
-              const DataColumn(label: Text('Keterangan')),
-              const DataColumn(label: Text('Aksi')),
-            ],
-            rows: List.generate(controller.filteredLokasis.length, (index) {
-              final item = controller.filteredLokasis[index];
-              final isSelected = controller.selectedIds.contains(item.id);
+      // TAMPILKAN DATA
+      return _buildDataTable(context);
+    });
+  }
 
-              return DataRow(
-                selected: isSelected,
-                onSelectChanged: controller.isSelectionMode.value
-                    ? (selected) => controller.toggleSelectItem(item.id)
-                    : (_) {
-                        DetailPusatLokasiModal.show(context, item);
-                      },
-                cells: [
-                  if (controller.isSelectionMode.value)
-                    DataCell(
-                      Checkbox(
-                        value: isSelected,
-                        onChanged: (_) => controller.toggleSelectItem(item.id),
-                        activeColor: Colors.blue,
-                      ),
-                    ),
+  // ========== BUILD DATA TABLE ==========
+  Widget _buildDataTable(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: DataTable(
+          headingRowColor: MaterialStateProperty.all(Colors.blue.shade50),
+          headingTextStyle: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.blue.shade700,
+          ),
+          columnSpacing: 20,
+          horizontalMargin: 16,
+          columns: [
+            if (controller.isSelectionMode.value)
+              const DataColumn(label: Text('Pilih')),
+            const DataColumn(label: Text('No')),
+            const DataColumn(label: Text('Nama Lokasi')),
+            const DataColumn(label: Text('Titik Kordinat')),
+            const DataColumn(label: Text('Keterangan')),
+            const DataColumn(label: Text('Aksi')),
+          ],
+          rows: List.generate(controller.filteredLokasis.length, (index) {
+            final item = controller.filteredLokasis[index];
+            final isSelected = controller.selectedIds.contains(item.id);
+
+            return DataRow(
+              selected: isSelected,
+              onSelectChanged: controller.isSelectionMode.value
+                  ? (selected) => controller.toggleSelectItem(item.id)
+                  : (_) {
+                      DetailPusatLokasiModal.show(context, item);
+                    },
+              cells: [
+                if (controller.isSelectionMode.value)
                   DataCell(
-                    InkWell(
-                      onTap: () {
-                        if (!controller.isSelectionMode.value) {
-                          DetailPusatLokasiModal.show(context, item);
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              color: Colors.blue.shade700,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
+                    Checkbox(
+                      value: isSelected,
+                      onChanged: (_) => controller.toggleSelectItem(item.id),
+                      activeColor: Colors.blue,
+                    ),
+                  ),
+                // Nomor
+                DataCell(
+                  InkWell(
+                    onTap: () {
+                      if (!controller.isSelectionMode.value) {
+                        DetailPusatLokasiModal.show(context, item);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            color: Colors.blue.shade700,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
                           ),
                         ),
                       ),
                     ),
                   ),
-                  // Nama Lokasi
-                  DataCell(
-                    InkWell(
-                      onTap: () {
-                        if (!controller.isSelectionMode.value) {
-                          DetailPusatLokasiModal.show(context, item);
-                        }
-                      },
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          item.namaLokasi,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                ),
+                // Nama Lokasi
+                DataCell(
+                  InkWell(
+                    onTap: () {
+                      if (!controller.isSelectionMode.value) {
+                        DetailPusatLokasiModal.show(context, item);
+                      }
+                    },
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        item.namaLokasi,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
-                  // Titik Kordinat
-                  DataCell(
-                    InkWell(
-                      onTap: () {
-                        if (!controller.isSelectionMode.value) {
-                          DetailPusatLokasiModal.show(context, item);
-                        }
-                      },
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 150),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            Icon(
-                              item.isKordinatValid
-                                  ? Icons.check_circle
-                                  : Icons.warning,
-                              size: 14,
-                              color: item.isKordinatValid
-                                  ? Colors.green
-                                  : Colors.orange,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                item.formattedKordinat,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: item.isKordinatValid
-                                      ? Colors.black87
-                                      : Colors.orange,
-                                ),
+                ),
+                // Titik Kordinat
+                DataCell(
+                  InkWell(
+                    onTap: () {
+                      if (!controller.isSelectionMode.value) {
+                        DetailPusatLokasiModal.show(context, item);
+                      }
+                    },
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 150),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            item.isKordinatValid
+                                ? Icons.check_circle
+                                : Icons.warning,
+                            size: 14,
+                            color: item.isKordinatValid
+                                ? Colors.green
+                                : Colors.orange,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              item.formattedKordinat,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: item.isKordinatValid
+                                    ? Colors.black87
+                                    : Colors.orange,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  DataCell(
-                    InkWell(
-                      onTap: () {
-                        if (!controller.isSelectionMode.value) {
+                ),
+                // Keterangan
+                DataCell(
+                  InkWell(
+                    onTap: () {
+                      if (!controller.isSelectionMode.value) {
+                        DetailPusatLokasiModal.show(context, item);
+                      }
+                    },
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        item.keterangan ?? '-',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ),
+                ),
+                // Aksi
+                DataCell(
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Detail
+                      IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.visibility,
+                            color: Colors.blue,
+                            size: 18,
+                          ),
+                        ),
+                        onPressed: () {
                           DetailPusatLokasiModal.show(context, item);
-                        }
-                      },
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          item.keterangan ?? '-',
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontStyle: FontStyle.italic),
-                        ),
+                        },
+                        tooltip: 'Detail',
                       ),
-                    ),
+                      // Edit
+                      IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.orange,
+                            size: 18,
+                          ),
+                        ),
+                        onPressed: () {
+                          EditPusatLokasiModal.show(context, controller, item);
+                        },
+                        tooltip: 'Edit',
+                      ),
+                      // Hapus
+                      IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                            size: 18,
+                          ),
+                        ),
+                        onPressed: () {
+                          _showDeleteConfirmation(context, controller, item);
+                        },
+                        tooltip: 'Hapus',
+                      ),
+                    ],
                   ),
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.visibility,
-                              color: Colors.blue,
-                              size: 18,
-                            ),
-                          ),
-                          onPressed: () {
-                            DetailPusatLokasiModal.show(context, item);
-                          },
-                          tooltip: 'Detail',
-                        ),
-                        // Tombol Edit
-                        IconButton(
-                          icon: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.shade50,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.edit,
-                              color: Colors.orange,
-                              size: 18,
-                            ),
-                          ),
-                          onPressed: () {
-                            EditPusatLokasiModal.show(
-                              context,
-                              controller,
-                              item,
-                            );
-                          },
-                          tooltip: 'Edit',
-                        ),
-
-                        IconButton(
-                          icon: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.red,
-                              size: 18,
-                            ),
-                          ),
-                          onPressed: () {
-                            _showDeleteConfirmation(context, controller, item);
-                          },
-                          tooltip: 'Hapus',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }),
-          ),
+                ),
+              ],
+            );
+          }),
         ),
-      );
-    });
+      ),
+    );
   }
 
   void _showDeleteConfirmation(

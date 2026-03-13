@@ -46,6 +46,14 @@ class MasterDrawer extends StatelessWidget {
               iconColor: Colors.purple,
             ),
 
+            _buildMenuItem(
+              icon: Icons.person,
+              title: 'Profil Admin',
+              routeName: '/admin/profil',
+              pageName: 'profil-admin',
+              iconColor: Colors.teal,
+            ),
+
             _buildRiwayatMenuItem(),
 
             const Divider(height: 32, thickness: 1),

@@ -8,8 +8,8 @@ class AuthController extends GetxController {
   static AuthController instance = Get.find();
 
   final box = GetStorage();
-  final String baseUrl = 'http://192.168.95.243:8000/api';
-  // final String baseUrl = 'http://10.0.2.2:8000/api';
+  // final String baseUrl = 'http://192.168.95.243:8000/api';
+  final String baseUrl = 'http://10.0.2.2:8000/api';
   // final String baseUrl = 'http://192.168.1.10:8000/api';
 
   var isLoading = false.obs;
@@ -166,6 +166,172 @@ class AuthController extends GetxController {
         colorText: Colors.white,
         snackPosition: SnackPosition.TOP,
       );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ================= GANTI PASSWORD UNTUK ADMIN =================
+  Future<bool> changePasswordAdmin({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    if (token.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Anda harus login terlebih dahulu',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    isLoading.value = true;
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse(
+              '$baseUrl/admin/change-password',
+            ), // ENDPOINT KHUSUS ADMIN
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${token.value}',
+            },
+            body: jsonEncode({
+              'current_password': currentPassword,
+              'new_password': newPassword,
+              'confirm_password': confirmPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          '✅ Berhasil',
+          data['message'] ?? 'Password berhasil diubah',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: const Duration(seconds: 2),
+        );
+        return true;
+      } else {
+        String errorMessage = data['message'] ?? 'Gagal mengubah password';
+
+        if (data['errors'] != null) {
+          final errors = data['errors'] as Map;
+          final firstError = errors.values.first;
+          if (firstError is List && firstError.isNotEmpty) {
+            errorMessage = firstError.first;
+          }
+        }
+
+        Get.snackbar(
+          '❌ Gagal',
+          errorMessage,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: const Duration(seconds: 3),
+        );
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error change password admin: $e');
+      Get.snackbar(
+        'Error',
+        'Koneksi error: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ================= GANTI PASSWORD =================
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    if (token.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Anda harus login terlebih dahulu',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    isLoading.value = true;
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/user/change-password'),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${token.value}',
+            },
+            body: jsonEncode({
+              'current_password': currentPassword,
+              'new_password': newPassword,
+              'confirm_password': confirmPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          '✅ Berhasil',
+          data['message'] ?? 'Password berhasil diubah',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: const Duration(seconds: 2),
+        );
+        return true;
+      } else {
+        String errorMessage = data['message'] ?? 'Gagal mengubah password';
+
+        if (data['errors'] != null) {
+          final errors = data['errors'] as Map;
+          final firstError = errors.values.first;
+          if (firstError is List && firstError.isNotEmpty) {
+            errorMessage = firstError.first;
+          }
+        }
+
+        Get.snackbar(
+          '❌ Gagal',
+          errorMessage,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: const Duration(seconds: 3),
+        );
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error change password: $e');
+      Get.snackbar(
+        'Error',
+        'Koneksi error: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
     } finally {
       isLoading.value = false;
     }

@@ -22,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login Admin'),
+        title: const Text('Login'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -140,7 +140,7 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 8),
 
-                    // lupa password
+                    // Forgot Password Link
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
@@ -189,35 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
-
-                    // ttambah akun
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Belum punya akun? ',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => Get.toNamed('/register'),
-                            child: Text(
-                              'Daftar Sekarang',
-                              style: TextStyle(
-                                color: Colors.blue.shade700,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
+                    // HAPUS BAGIAN REGISTER LINK
                     const SizedBox(height: 30),
 
                     // Info Card
@@ -250,12 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            '• Gunakan akun admin yang sudah terdaftar',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            '• Jika belum punya akun, silahkan register terlebih dahulu',
+                            '• Gunakan akun yang sudah terdaftar',
                             style: TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                           const SizedBox(height: 4),
@@ -274,7 +241,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() {
-    // melakukan reset error
+    // Reset error
     emailError.value = '';
     passwordError.value = '';
 
@@ -302,6 +269,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (!isValid) return;
 
+    // Panggil controller login
     authController.login(email, password);
   }
 }

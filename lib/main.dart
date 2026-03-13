@@ -1,26 +1,96 @@
-import 'package:flutter/material.dart';
-import 'package:frontend_flutter/pages/splash_pages.dart';
-import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-import 'bindings/initial_binding.dart';
-import 'bindings/user_lokasi_binding.dart';
-import 'bindings/lokasi_binding.dart';
-import 'bindings/pusat_lokasi_binding.dart';
-import 'pages/auth/login_page.dart';
-import 'pages/auth/register_page.dart';
-import 'pages/admin/listAkun/list_akun.dart';
-import 'pages/admin/lokasiPage/lokasi_page.dart';
-import 'pages/admin/pusatLokasi/pusat_lokasi_page.dart';
-import 'pages/admin/riwayatSemuaUserPage/riwayat_semua_user_page.dart';
-import 'pages/user/userPage/user_page.dart';
-import 'pages/user/riwayatAbsensiPage/riwayat_absensi_page.dart';
-import 'controllers/auth_controller.dart';
+// import 'package:flutter/material.dart';
+// import 'package:frontend_flutter/pages/splash_pages.dart';
+// import 'package:get/get.dart';
+// import 'package:get_storage/get_storage.dart';
+// import 'bindings/initial_binding.dart';
+// import 'bindings/user_lokasi_binding.dart';
+// import 'bindings/lokasi_binding.dart';
+// import 'bindings/pusat_lokasi_binding.dart';
+// import 'pages/auth/login_page.dart';
+// import 'pages/auth/register_page.dart';
+// import 'pages/admin/listAkun/list_akun.dart';
+// import 'pages/admin/lokasiPage/lokasi_page.dart';
+// import 'pages/admin/pusatLokasi/pusat_lokasi_page.dart';
+// import 'pages/admin/riwayatSemuaUserPage/riwayat_semua_user_page.dart';
+// import 'pages/user/userPage/user_page.dart';
+// import 'pages/user/riwayatAbsensiPage/riwayat_absensi_page.dart';
+// import 'controllers/auth_controller.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await GetStorage.init();
-  runApp(const MyApp());
-}
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await GetStorage.init();
+//   runApp(const MyApp());
+// }
+
+// // class MyApp extends StatelessWidget {
+// //   const MyApp({super.key});
+
+// //   @override
+// //   Widget build(BuildContext context) {
+// //     return GetMaterialApp(
+// //       title: 'Absensi App',
+// //       debugShowCheckedModeBanner: false,
+// //       initialBinding: InitialBinding(),
+// //       initialRoute: _getInitialRoute(),
+// //       getPages: [
+// //         GetPage(name: '/', page: () => const SplashPage()),
+
+// //         GetPage(name: '/login', page: () => LoginPage()),
+// //         GetPage(name: '/register', page: () => RegisterPage()),
+
+// //         // ===== ADMIN ROUTES =====
+// //         GetPage(name: '/admin', page: () => const ListAkunPage()),
+
+// //         GetPage(
+// //           name: '/admin/lokasi',
+// //           page: () => LokasiPage(),
+// //           binding: LokasiBinding(),
+// //         ),
+
+// //         GetPage(
+// //           name: '/admin/pusat-lokasi',
+// //           page: () => const PusatLokasiPage(),
+// //           binding: PusatLokasiBinding(),
+// //         ),
+
+// //         // Tambahkan route untuk  riwayat semua user
+// //         // GetPage(
+// //         //   name: '/admin/riwayat-semua',
+// //         //   page: () => const RiwayatSemuaUserPage(),
+// //         //   binding: AdminAbsensiBinding(),
+// //         // ),
+
+// //         // ===== USER ROUTES =====
+// //         GetPage(
+// //           name: '/user',
+// //           page: () => const UserPage(),
+// //           binding: UserLokasiBinding(),
+// //         ),
+
+// //         GetPage(name: '/user/riwayat', page: () => const RiwayatAbsensiPage()),
+// //       ],
+// //     );
+// //   }
+
+// //   String _getInitialRoute() {
+// //     // Cek apakah AuthController sudah terdaftar
+// //     if (Get.isRegistered<AuthController>()) {
+// //       final auth = Get.find<AuthController>();
+
+// //       // Jika sudah login
+// //       if (auth.isLoggedIn) {
+// //         // Redirect sesuai role
+// //         if (auth.isAdmin) {
+// //           return '/admin';
+// //         } else {
+// //           return '/user';
+// //         }
+// //       }
+// //     }
+// //     // Jika belum login
+// //     return '/login';
+// //   }
+// // }
 
 // class MyApp extends StatelessWidget {
 //   const MyApp({super.key});
@@ -31,14 +101,15 @@ void main() async {
 //       title: 'Absensi App',
 //       debugShowCheckedModeBanner: false,
 //       initialBinding: InitialBinding(),
-//       initialRoute: _getInitialRoute(),
+//       initialRoute: '/',
 //       getPages: [
 //         GetPage(name: '/', page: () => const SplashPage()),
 
+//         // rute auth
 //         GetPage(name: '/login', page: () => LoginPage()),
 //         GetPage(name: '/register', page: () => RegisterPage()),
 
-//         // ===== ADMIN ROUTES =====
+//         // rute admin
 //         GetPage(name: '/admin', page: () => const ListAkunPage()),
 
 //         GetPage(
@@ -53,14 +124,7 @@ void main() async {
 //           binding: PusatLokasiBinding(),
 //         ),
 
-//         // Tambahkan route untuk  riwayat semua user
-//         // GetPage(
-//         //   name: '/admin/riwayat-semua',
-//         //   page: () => const RiwayatSemuaUserPage(),
-//         //   binding: AdminAbsensiBinding(),
-//         // ),
-
-//         // ===== USER ROUTES =====
+//         // untuk user
 //         GetPage(
 //           name: '/user',
 //           page: () => const UserPage(),
@@ -71,26 +135,32 @@ void main() async {
 //       ],
 //     );
 //   }
-
-//   String _getInitialRoute() {
-//     // Cek apakah AuthController sudah terdaftar
-//     if (Get.isRegistered<AuthController>()) {
-//       final auth = Get.find<AuthController>();
-
-//       // Jika sudah login
-//       if (auth.isLoggedIn) {
-//         // Redirect sesuai role
-//         if (auth.isAdmin) {
-//           return '/admin';
-//         } else {
-//           return '/user';
-//         }
-//       }
-//     }
-//     // Jika belum login
-//     return '/login';
-//   }
 // }
+
+import 'package:flutter/material.dart';
+import 'package:frontend_flutter/pages/admin/profil_admin_page.dart';
+import 'package:frontend_flutter/pages/splash_pages.dart';
+import 'package:frontend_flutter/pages/user/riwayatAbsensiPage/riwayat_absensi_page.dart';
+import 'package:frontend_flutter/pages/user/userPage/user_page.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+
+import 'bindings/initial_binding.dart';
+import 'bindings/user_lokasi_binding.dart';
+import 'bindings/lokasi_binding.dart';
+import 'bindings/pusat_lokasi_binding.dart';
+import 'pages/auth/login_page.dart';
+// HAPUS IMPORT register_page
+import 'pages/admin/listAkun/list_akun.dart';
+import 'pages/admin/lokasiPage/lokasi_page.dart';
+import 'pages/admin/pusatLokasi/pusat_lokasi_page.dart';
+import 'controllers/auth_controller.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await GetStorage.init();
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -103,34 +173,34 @@ class MyApp extends StatelessWidget {
       initialBinding: InitialBinding(),
       initialRoute: '/',
       getPages: [
+        // Splash Screen
         GetPage(name: '/', page: () => const SplashPage()),
 
-        // rute auth
+        // Auth Routes - HANYA LOGIN
         GetPage(name: '/login', page: () => LoginPage()),
-        GetPage(name: '/register', page: () => RegisterPage()),
+        // HAPUS ROUTE REGISTER
 
-        // rute admin
+        // Admin Routes
         GetPage(name: '/admin', page: () => const ListAkunPage()),
-
         GetPage(
           name: '/admin/lokasi',
           page: () => LokasiPage(),
           binding: LokasiBinding(),
         ),
-
         GetPage(
           name: '/admin/pusat-lokasi',
           page: () => const PusatLokasiPage(),
           binding: PusatLokasiBinding(),
         ),
 
-        // untuk user
+        GetPage(name: '/admin/profil', page: () => const ProfilAdminPage()),
+
+        // User Routes
         GetPage(
           name: '/user',
           page: () => const UserPage(),
           binding: UserLokasiBinding(),
         ),
-
         GetPage(name: '/user/riwayat', page: () => const RiwayatAbsensiPage()),
       ],
     );
