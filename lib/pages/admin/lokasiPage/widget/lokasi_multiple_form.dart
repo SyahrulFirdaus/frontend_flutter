@@ -116,7 +116,6 @@ class LokasiMultipleForm extends GetView<LokasiController> {
           }).toList(),
           onChanged: (v) {
             controller.selectedUserForMultiple.value = v ?? '';
-
             controller.fetchPusatLokasi();
           },
           validator: (value) {
@@ -155,9 +154,12 @@ class LokasiMultipleForm extends GetView<LokasiController> {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 400,
+            height: 450, // Tinggi tetap untuk tab content
             child: TabBarView(
-              children: [_buildPusatLokasiList(), _buildManualEntryList()],
+              children: [
+                _buildPusatLokasiGrid(), // UBAH KE GRID 2 KOLOM
+                _buildManualEntryList(),
+              ],
             ),
           ),
         ],
@@ -165,7 +167,8 @@ class LokasiMultipleForm extends GetView<LokasiController> {
     );
   }
 
-  Widget _buildPusatLokasiList() {
+  // ========== GRID 2 KOLOM UNTUK PUSAT LOKASI ==========
+  Widget _buildPusatLokasiGrid() {
     return Obx(() {
       if (controller.pusatLokasis.isEmpty) {
         return Center(
@@ -202,6 +205,7 @@ class LokasiMultipleForm extends GetView<LokasiController> {
 
       return Column(
         children: [
+          // Header dengan Select All
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
@@ -256,109 +260,178 @@ class LokasiMultipleForm extends GetView<LokasiController> {
           ),
           const SizedBox(height: 8),
 
+          // GRID VIEW 2 KOLOM
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 1.2,
               ),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: controller.pusatLokasis.length,
-                separatorBuilder: (context, index) =>
-                    Divider(height: 1, color: Colors.grey.shade200),
-                itemBuilder: (context, index) {
-                  final item = controller.pusatLokasis[index];
-                  final isSelected = controller.selectedPusatLokasiIds.contains(
-                    item['id'],
-                  );
+              itemCount: controller.pusatLokasis.length,
+              itemBuilder: (context, index) {
+                final item = controller.pusatLokasis[index];
+                final isSelected = controller.selectedPusatLokasiIds.contains(
+                  item['id'],
+                );
 
-                  return CheckboxListTile(
-                    title: Text(
-                      item['nama_lokasi'],
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on,
-                              size: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              child: Text(
-                                item['titik_kordinat'],
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade600,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (item['keterangan'] != null &&
-                            item['keterangan'].toString().isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.description,
-                                  size: 12,
-                                  color: Colors.grey.shade500,
-                                ),
-                                const SizedBox(width: 2),
-                                Expanded(
-                                  child: Text(
-                                    item['keterangan'],
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey.shade500,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                    value: isSelected,
-                    onChanged: (_) =>
-                        controller.togglePusatLokasiItem(item['id']),
-                    secondary: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.blue : Colors.blue.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.location_on,
-                        color: isSelected ? Colors.white : Colors.blue.shade700,
-                        size: 18,
-                      ),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                  );
-                },
-              ),
+                return _buildGridItem(item, isSelected, index);
+              },
             ),
           ),
         ],
       );
     });
+  }
+
+  // ========== ITEM GRID ==========
+  Widget _buildGridItem(Map<String, dynamic> item, bool isSelected, int index) {
+    return GestureDetector(
+      onTap: () => controller.togglePusatLokasiItem(item['id']),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue.shade50 : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? Colors.blue : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Checkbox indikator
+                  Row(
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.blue : Colors.transparent,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? Colors.blue
+                                : Colors.grey.shade400,
+                            width: 2,
+                          ),
+                        ),
+                        child: isSelected
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 14,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          item['nama_lokasi'],
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? Colors.blue : Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Koordinat
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 10,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          _shortenKoordinat(item['titik_kordinat']),
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: Colors.grey.shade700,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Keterangan (jika ada)
+                  if (item['keterangan'] != null &&
+                      item['keterangan'].toString().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.description,
+                            size: 8,
+                            color: Colors.grey.shade500,
+                          ),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              _shortenText(item['keterangan'], 30),
+                              style: TextStyle(
+                                fontSize: 8,
+                                color: Colors.grey.shade600,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ========== HELPER ==========
+  String _shortenKoordinat(String koordinat) {
+    final parts = koordinat.split(',');
+    if (parts.length == 2) {
+      final lat = double.tryParse(parts[0].trim());
+      final lng = double.tryParse(parts[1].trim());
+      if (lat != null && lng != null) {
+        return '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
+      }
+    }
+    return koordinat.length > 25
+        ? '${koordinat.substring(0, 22)}...'
+        : koordinat;
+  }
+
+  String _shortenText(String text, int maxLength) {
+    if (text.length <= maxLength) return text;
+    return '${text.substring(0, maxLength - 3)}...';
   }
 
   Widget _buildManualEntryList() {
