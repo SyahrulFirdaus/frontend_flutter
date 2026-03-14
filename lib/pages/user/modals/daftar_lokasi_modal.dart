@@ -10,7 +10,6 @@ class DaftarLokasiModal {
     final selectedLocation = Rxn<LatLng>();
     final selectedLokasi = Rxn<Map<String, dynamic>>();
 
-    // Fungsi logging yang aman
     void log(String message) {
       if (kDebugMode) {
         debugPrint('📍 [DaftarLokasiModal] $message');
@@ -45,7 +44,6 @@ class DaftarLokasiModal {
               ),
             ),
 
-            // Header
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -93,7 +91,6 @@ class DaftarLokasiModal {
 
             const Divider(height: 1),
 
-            // Content
             Expanded(
               child: Obx(() {
                 if (controller.userLokasis.isEmpty) {
@@ -126,7 +123,6 @@ class DaftarLokasiModal {
 
                 return Column(
                   children: [
-                    // List Lokasi
                     Expanded(
                       flex: 3,
                       child: ListView.builder(
@@ -149,10 +145,8 @@ class DaftarLokasiModal {
                                   final lat = double.tryParse(parts[0].trim());
                                   final lng = double.tryParse(parts[1].trim());
                                   if (lat != null && lng != null) {
-                                    // PERBAIKAN 1: LatLong -> LatLng
                                     selectedLocation.value = LatLng(lat, lng);
                                     if (mapController != null) {
-                                      // PERBAIKAN 2: newLatLongZoom -> newLatLngZoom
                                       mapController!.animateCamera(
                                         CameraUpdate.newLatLngZoom(
                                           selectedLocation.value!,
@@ -163,7 +157,6 @@ class DaftarLokasiModal {
                                   }
                                 }
                               } catch (e) {
-                                // PERBAIKAN 3: Ganti print dengan debugPrint
                                 log('Error parsing koordinat: $e');
                               }
                             },
@@ -319,7 +312,6 @@ class DaftarLokasiModal {
                       ),
                     ),
 
-                    // Map Preview
                     if (selectedLocation.value != null)
                       Container(
                         height: 200,
@@ -398,7 +390,6 @@ class DaftarLokasiModal {
               }),
             ),
 
-            // Tombol Tutup
             Padding(
               padding: const EdgeInsets.all(16),
               child: SizedBox(

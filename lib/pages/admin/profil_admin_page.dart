@@ -11,7 +11,6 @@ class ProfilAdminPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
 
-    // Cek apakah ini super admin
     final bool isSuperAdmin =
         authController.userEmail == 'superadmin@absensi.com';
 
@@ -39,18 +38,14 @@ class ProfilAdminPage extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                // Header dengan Avatar
                 _buildHeader(authController, isSuperAdmin),
                 const SizedBox(height: 30),
 
-                // Info Card
                 _buildInfoCard(authController, isSuperAdmin),
                 const SizedBox(height: 30),
 
-                // Ganti Password (Hanya untuk admin biasa)
                 if (!isSuperAdmin) _buildGantiPasswordMenu(context),
 
-                // Untuk Super Admin, tampilkan info saja
                 if (isSuperAdmin) _buildSuperAdminInfo(),
 
                 const SizedBox(height: 20),
@@ -62,7 +57,6 @@ class ProfilAdminPage extends StatelessWidget {
     );
   }
 
-  // ================= HEADER DENGAN AVATAR =================
   Widget _buildHeader(AuthController authController, bool isSuperAdmin) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -79,7 +73,6 @@ class ProfilAdminPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Avatar dengan inisial
           Container(
             width: 100,
             height: 100,
@@ -114,7 +107,6 @@ class ProfilAdminPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Nama
           Text(
             authController.userName,
             style: TextStyle(
@@ -124,7 +116,6 @@ class ProfilAdminPage extends StatelessWidget {
             ),
           ),
 
-          // Role Badge
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -151,7 +142,6 @@ class ProfilAdminPage extends StatelessWidget {
     );
   }
 
-  // ================= CARD INFORMASI =================
   Widget _buildInfoCard(AuthController authController, bool isSuperAdmin) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -179,7 +169,6 @@ class ProfilAdminPage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // Email
           _buildInfoRow(
             icon: Icons.email,
             label: 'Email',
@@ -188,7 +177,6 @@ class ProfilAdminPage extends StatelessWidget {
           ),
           const Divider(height: 20),
 
-          // Role
           _buildInfoRow(
             icon: Icons.badge,
             label: 'Role',
@@ -197,7 +185,6 @@ class ProfilAdminPage extends StatelessWidget {
           ),
           const Divider(height: 20),
 
-          // ID User
           _buildInfoRow(
             icon: Icons.numbers,
             label: 'ID User',
@@ -209,7 +196,6 @@ class ProfilAdminPage extends StatelessWidget {
     );
   }
 
-  // ================= ROW INFORMASI =================
   Widget _buildInfoRow({
     required IconData icon,
     required String label,
@@ -250,7 +236,6 @@ class ProfilAdminPage extends StatelessWidget {
     );
   }
 
-  // ================= MENU GANTI PASSWORD (UNTUK ADMIN BIASA) =================
   Widget _buildGantiPasswordMenu(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -286,14 +271,12 @@ class ProfilAdminPage extends StatelessWidget {
         ),
         trailing: Icon(Icons.chevron_right, color: Colors.orange[400]),
         onTap: () {
-          // Panggil modal ganti password
           GantiPasswordModal.show(context);
         },
       ),
     );
   }
 
-  // ================= INFO UNTUK SUPER ADMIN =================
   Widget _buildSuperAdminInfo() {
     return Container(
       width: double.infinity,

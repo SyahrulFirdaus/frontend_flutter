@@ -9,8 +9,8 @@ class AuthController extends GetxController {
 
   final box = GetStorage();
   // final String baseUrl = 'http://192.168.95.243:8000/api';
-  // final String baseUrl = 'http://10.0.2.2:8000/api';
-  final String baseUrl = 'http://192.168.1.8:8000/api';
+  final String baseUrl = 'http://10.0.2.2:8000/api';
+  // final String baseUrl = 'http://192.168.1.8:8000/api';
 
   var isLoading = false.obs;
   var token = ''.obs;
@@ -22,7 +22,6 @@ class AuthController extends GetxController {
     _loadStoredData();
   }
 
-  // LOAD DATA DARI STORAGE
   void _loadStoredData() {
     token.value = box.read('token') ?? '';
     user.value = box.read('user') ?? {};
@@ -66,12 +65,10 @@ class AuthController extends GetxController {
           duration: const Duration(seconds: 2),
         );
 
-        // Redirect ke halaman login setelah register berhasil
         Get.offAllNamed('/login');
       } else {
         String errorMessage = data['message'] ?? 'Register gagal';
 
-        // Tampilkan error validasi jika ada
         if (data['errors'] != null) {
           final errors = data['errors'] as Map;
           final firstError = errors.values.first;
@@ -171,7 +168,6 @@ class AuthController extends GetxController {
     }
   }
 
-  // ================= GANTI PASSWORD UNTUK ADMIN =================
   Future<bool> changePasswordAdmin({
     required String currentPassword,
     required String newPassword,
@@ -212,7 +208,7 @@ class AuthController extends GetxController {
 
       if (response.statusCode == 200) {
         Get.snackbar(
-          '✅ Berhasil',
+          'Berhasil',
           data['message'] ?? 'Password berhasil diubah',
           backgroundColor: Colors.green,
           colorText: Colors.white,
@@ -232,7 +228,7 @@ class AuthController extends GetxController {
         }
 
         Get.snackbar(
-          '❌ Gagal',
+          'Gagal',
           errorMessage,
           backgroundColor: Colors.red,
           colorText: Colors.white,
@@ -242,7 +238,7 @@ class AuthController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('❌ Error change password admin: $e');
+      print('Error change password admin: $e');
       Get.snackbar(
         'Error',
         'Koneksi error: ${e.toString()}',
@@ -255,7 +251,6 @@ class AuthController extends GetxController {
     }
   }
 
-  // ================= GANTI PASSWORD =================
   Future<bool> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -294,7 +289,7 @@ class AuthController extends GetxController {
 
       if (response.statusCode == 200) {
         Get.snackbar(
-          '✅ Berhasil',
+          'Berhasil',
           data['message'] ?? 'Password berhasil diubah',
           backgroundColor: Colors.green,
           colorText: Colors.white,
@@ -314,7 +309,7 @@ class AuthController extends GetxController {
         }
 
         Get.snackbar(
-          '❌ Gagal',
+          'Gagal',
           errorMessage,
           backgroundColor: Colors.red,
           colorText: Colors.white,
@@ -324,7 +319,7 @@ class AuthController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('❌ Error change password: $e');
+      print('Error change password: $e');
       Get.snackbar(
         'Error',
         'Koneksi error: ${e.toString()}',

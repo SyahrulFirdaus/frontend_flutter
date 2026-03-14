@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../controllers/lokasi_controller.dart';
 import '../../../../models/lokasi_model.dart';
+import '../modals/detail_lokasi_user_modal.dart';
 
 class LokasiTableWidget extends GetView<LokasiController> {
   const LokasiTableWidget({super.key});
@@ -9,7 +10,6 @@ class LokasiTableWidget extends GetView<LokasiController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // GANTI DENGAN Obx AGAR AUTO UPDATE
       if (controller.isLoading.value) {
         return const Center(child: CircularProgressIndicator());
       }
@@ -35,7 +35,6 @@ class LokasiTableWidget extends GetView<LokasiController> {
         );
       }
 
-      // GROUP DATA BERDASARKAN USER
       final Map<String, List<LokasiModel>> groupedByUser = {};
       for (var lokasi in controller.lokasis) {
         if (!groupedByUser.containsKey(lokasi.user)) {
@@ -44,13 +43,11 @@ class LokasiTableWidget extends GetView<LokasiController> {
         groupedByUser[lokasi.user]!.add(lokasi);
       }
 
-      // URUTKAN USER BERDASARKAN NAMA
       final sortedUsers = groupedByUser.keys.toList()..sort();
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header dengan total
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: Row(
@@ -82,7 +79,6 @@ class LokasiTableWidget extends GetView<LokasiController> {
           ),
           const SizedBox(height: 8),
 
-          // TABEL DENGAN GROUPING
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Container(
@@ -112,10 +108,17 @@ class LokasiTableWidget extends GetView<LokasiController> {
                   rows: List.generate(sortedUsers.length, (index) {
                     final userName = sortedUsers[index];
                     final userLokasi = groupedByUser[userName]!;
+                    final totalLokasi = userLokasi.length;
 
                     return DataRow(
+                      onSelectChanged: (_) {
+                        DetailLokasiUserModal.show(
+                          context,
+                          userName,
+                          userLokasi,
+                        );
+                      },
                       cells: [
-                        // Nomor
                         DataCell(
                           Container(
                             width: 24,
@@ -139,101 +142,149 @@ class LokasiTableWidget extends GetView<LokasiController> {
 
                         // User
                         DataCell(
-                          Container(
-                            constraints: const BoxConstraints(minWidth: 120),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.person,
-                                  size: 16,
-                                  color: Colors.blue.shade600,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    userName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                          InkWell(
+                            onTap: () {
+                              DetailLokasiUserModal.show(
+                                context,
+                                userName,
+                                userLokasi,
+                              );
+                            },
+                            child: Container(
+                              constraints: const BoxConstraints(minWidth: 120),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.person,
+                                    size: 16,
+                                    color: Colors.blue.shade600,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      userName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        decoration: TextDecoration.underline,
+                                        color: Colors.blue,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Daftar Lokasi (chip-chip)
-                        DataCell(
-                          Container(
-                            constraints: const BoxConstraints(minWidth: 300),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Wrap(
-                              spacing: 8,
-                              runSpacing: 4,
-                              children: userLokasi.map((lokasi) {
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: Colors.blue.shade200,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.location_on,
-                                        size: 12,
-                                        color: Colors.blue.shade600,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        lokasi.lokasi,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.blue.shade700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ),
-
-                        // Jumlah Lokasi
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${userLokasi.length}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green.shade700,
+                                ],
                               ),
                             ),
                           ),
                         ),
 
-                        // Aksi
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              DetailLokasiUserModal.show(
+                                context,
+                                userName,
+                                userLokasi,
+                              );
+                            },
+                            child: Container(
+                              constraints: const BoxConstraints(minWidth: 300),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                children: [
+                                  ...userLokasi.take(3).map((lokasi) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.shade50,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: Colors.blue.shade200,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.location_on,
+                                            size: 12,
+                                            color: Colors.blue.shade600,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            lokasi.lokasi,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.blue.shade700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+
+                                  if (totalLokasi > 3)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Text(
+                                        '+${totalLokasi - 3} lagi',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              DetailLokasiUserModal.show(
+                                context,
+                                userName,
+                                userLokasi,
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '$totalLokasi',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
                         DataCell(
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (userLokasi.length == 1)
+                              if (totalLokasi == 1)
                                 IconButton(
                                   icon: Container(
                                     padding: const EdgeInsets.all(4),
@@ -327,12 +378,8 @@ class LokasiTableWidget extends GetView<LokasiController> {
           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
-              Get.back(); // Tutup dialog
-              await controller.deleteLokasi(
-                item.id,
-              ); // TUNGGU PROSES HAPUS SELESAI
-              // TIDAK PERLU PANGGIL CONTROLLER.FETCHLOKASI() LAGI
-              // KARENA DI DALAM DELETE SUDAH ADA
+              Get.back();
+              await Get.find<LokasiController>().deleteLokasi(item.id);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -367,24 +414,21 @@ class LokasiTableWidget extends GetView<LokasiController> {
           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () async {
-              Get.back(); // Tutup dialog
+              Get.back();
 
-              // TAMPILKAN LOADING
               Get.dialog(
                 const Center(child: CircularProgressIndicator()),
                 barrierDismissible: false,
               );
 
-              // Hapus satu per satu
               for (var lokasi in lokasiList) {
-                await controller.deleteLokasi(lokasi.id);
+                await Get.find<LokasiController>().deleteLokasi(lokasi.id);
               }
 
-              // Tutup loading
               Get.back();
 
               Get.snackbar(
-                '✅ Berhasil',
+                'Berhasil',
                 'Semua lokasi user $userName telah dihapus',
                 backgroundColor: Colors.green,
                 colorText: Colors.white,

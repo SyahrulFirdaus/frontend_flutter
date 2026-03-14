@@ -6,7 +6,6 @@ class GantiPasswordModal {
   static void show(BuildContext context) {
     final authController = Get.find<AuthController>();
 
-    // CEK ROLE UNTUK MENENTUKAN ENDPOINT
     final bool isAdmin = authController.isAdmin;
 
     final currentPassC = TextEditingController();
@@ -31,7 +30,6 @@ class GantiPasswordModal {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Handle
                 Center(
                   child: Container(
                     width: 50,
@@ -44,7 +42,6 @@ class GantiPasswordModal {
                 ),
                 const SizedBox(height: 20),
 
-                // Header
                 Row(
                   children: [
                     Container(
@@ -90,7 +87,6 @@ class GantiPasswordModal {
                 ),
                 const SizedBox(height: 24),
 
-                // Password Lama
                 Obx(
                   () => TextFormField(
                     controller: currentPassC,
@@ -127,7 +123,6 @@ class GantiPasswordModal {
                 ),
                 const SizedBox(height: 16),
 
-                // Password Baru
                 Obx(
                   () => TextFormField(
                     controller: newPassC,
@@ -173,7 +168,6 @@ class GantiPasswordModal {
                 ),
                 const SizedBox(height: 16),
 
-                // Konfirmasi Password Baru
                 Obx(
                   () => TextFormField(
                     controller: confirmPassC,
@@ -217,7 +211,6 @@ class GantiPasswordModal {
 
                 const SizedBox(height: 8),
 
-                // Info Password
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -254,7 +247,6 @@ class GantiPasswordModal {
 
                 const SizedBox(height: 24),
 
-                // Tombol Simpan
                 SizedBox(
                   width: double.infinity,
                   child: Obx(() {
@@ -264,10 +256,8 @@ class GantiPasswordModal {
                           ? null
                           : () async {
                               if (formKey.currentState!.validate()) {
-                                // Tutup modal
                                 Get.back();
 
-                                // PILIH METHOD BERDASARKAN ROLE
                                 bool success;
                                 if (isAdmin) {
                                   success = await authController
@@ -285,7 +275,6 @@ class GantiPasswordModal {
                                 }
 
                                 if (success) {
-                                  // Reset form
                                   currentPassC.clear();
                                   newPassC.clear();
                                   confirmPassC.clear();
@@ -314,7 +303,6 @@ class GantiPasswordModal {
 
                 const SizedBox(height: 12),
 
-                // Tombol Batal
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(

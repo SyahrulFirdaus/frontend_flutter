@@ -1,68 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_flutter/controllers/auth_controller.dart';
+import 'package:frontend_flutter/controllers/lokasi_controller.dart';
+import 'package:frontend_flutter/pages/admin/lokasiPage/widget/lokasi_multiple_form.dart';
+import 'package:frontend_flutter/pages/admin/lokasiPage/widget/lokasi_table_widget.dart';
+import 'package:frontend_flutter/pages/admin/master_drawer.dart';
 import 'package:get/get.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../../controllers/lokasi_controller.dart';
-import '../../../controllers/auth_controller.dart';
-import '../master_drawer.dart';
-import 'widget/lokasi_multiple_form.dart';
-import 'widget/lokasi_table_widget.dart';
 
-class LokasiPage extends StatefulWidget {
-  const LokasiPage({super.key});
-
-  @override
-  State<LokasiPage> createState() => _LokasiPageState();
-}
-
-class _LokasiPageState extends State<LokasiPage> {
-  late final LokasiController controller;
-  final RxInt selectedTabIndex = 0.obs;
-
-  final Rx<LatLng?> selectedLocation = Rx<LatLng?>(null);
-  GoogleMapController? mapController;
-
-  @override
-  void initState() {
-    super.initState();
-
-    controller = Get.put(LokasiController());
-    print('LokasiPage initialized with controller');
-  }
-
-  @override
-  void dispose() {
-    mapController?.dispose();
-    super.dispose();
-  }
+class LokasiPage extends StatelessWidget {
+  LokasiPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final auth = Get.find<AuthController>();
 
+    if (!Get.isRegistered<LokasiController>()) {
+      Get.put(LokasiController());
+    }
+
     return DefaultTabController(
-      length: 1,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Manajemen Lokasi User'),
+          title: const Text(
+            'Manajemen Lokasi User',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
           elevation: 2,
           bottom: const TabBar(
             indicatorColor: Colors.white,
+            indicatorWeight: 3,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
-            tabs: [Tab(icon: Icon(Icons.library_add), text: 'Multiple Entry')],
+            tabs: [
+              Tab(icon: Icon(Icons.add_location), text: 'Tambah Lokasi'),
+              Tab(icon: Icon(Icons.list), text: 'Daftar Lokasi'),
+            ],
           ),
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: () {
+                final controller = Get.find<LokasiController>();
                 controller.fetchLokasi();
                 controller.fetchUsers();
+                controller.fetchPusatLokasi();
                 Get.snackbar(
-                  'Info',
-                  'Data sedang diperbarui',
-                  backgroundColor: Colors.blue,
+                  'Sukses',
+                  'Data diperbarui',
+                  backgroundColor: Colors.green,
                   colorText: Colors.white,
                   snackPosition: SnackPosition.TOP,
                   duration: const Duration(seconds: 1),
@@ -90,37 +77,25 @@ class _LokasiPageState extends State<LokasiPage> {
             );
           }
 
-          if (controller.isUserLoading.value) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Memuat data user...'),
-                ],
-              ),
-            );
-          }
-
-          return const TabBarView(children: [_LokasiContent()]);
+          return const TabBarView(
+            children: [_TambahLokasiTab(), _DaftarLokasiTab()],
+          );
         }),
       ),
     );
   }
 }
 
-class _LokasiContent extends StatelessWidget {
-  const _LokasiContent();
+class _TambahLokasiTab extends StatelessWidget {
+  const _TambahLokasiTab();
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<LokasiController>();
-
     return RefreshIndicator(
       onRefresh: () async {
-        await controller.fetchLokasi();
+        final controller = Get.find<LokasiController>();
         await controller.fetchUsers();
+        await controller.fetchPusatLokasi();
       },
       color: Colors.blue,
       child: SingleChildScrollView(
@@ -129,8 +104,31 @@ class _LokasiContent extends StatelessWidget {
         child: Column(
           children: [
             const LokasiMultipleForm(),
-            const SizedBox(height: 16),
-            const LokasiTableWidget(),
+
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info, color: Colors.blue.shade600, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Pilih user terlebih dahulu, lalu centang lokasi dari pusat atau input manual.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 20),
           ],
         ),
@@ -139,41 +137,88 @@ class _LokasiContent extends StatelessWidget {
   }
 }
 
-extension LokasiPageHelper on LokasiController {
-  int getValidEntriesCount() {
-    return multipleLokasiEntries.where((entry) {
-      final lokasi = entry['lokasi']?.value ?? '';
-      final koordinat = entry['koordinat']?.value ?? '';
-      return lokasi.isNotEmpty && koordinat.isNotEmpty;
-    }).length;
-  }
+class _DaftarLokasiTab extends StatelessWidget {
+  const _DaftarLokasiTab();
 
-  void hapusLokasi(int id, String lokasi) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text(
-          'Hapus Lokasi',
-          style: TextStyle(fontWeight: FontWeight.bold),
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        final controller = Get.find<LokasiController>();
+        await controller.fetchLokasi();
+      },
+      color: Colors.blue,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const LokasiTableWidget(),
+
+            const SizedBox(height: 20),
+
+            Obx(() {
+              final controller = Get.find<LokasiController>();
+              final totalLokasi = controller.lokasis.length;
+
+              final Map<String, int> userCount = {};
+              for (var lokasi in controller.lokasis) {
+                userCount[lokasi.user] = (userCount[lokasi.user] ?? 0) + 1;
+              }
+
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.stacked_bar_chart,
+                        color: Colors.green.shade700,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total: $totalLokasi lokasi',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${userCount.length} user terdaftar',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.green.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+
+            const SizedBox(height: 20),
+          ],
         ),
-        content: Text('Yakin ingin menghapus lokasi "$lokasi"?'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              this.deleteLokasi(id);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Hapus'),
-          ),
-        ],
       ),
     );
   }
