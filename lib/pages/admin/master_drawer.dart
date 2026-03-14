@@ -22,14 +22,13 @@ class MasterDrawer extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            _buildMenuItem(
-              icon: Icons.person,
-              title: 'Profil Admin',
-              routeName: '/admin/profil',
-              pageName: 'profil-admin',
-              iconColor: Colors.teal,
-            ),
-
+            // _buildMenuItem(
+            //   icon: Icons.person,
+            //   title: 'Profil Admin',
+            //   routeName: '/admin/profil',
+            //   pageName: 'profil-admin',
+            //   iconColor: Colors.teal,
+            // ),
             _buildMenuItem(
               icon: Icons.people,
               title: 'List Akun',

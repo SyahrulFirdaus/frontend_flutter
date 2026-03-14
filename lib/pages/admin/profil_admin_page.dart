@@ -11,6 +11,8 @@ class ProfilAdminPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
 
+    // SAFE CHECK: pastikan user tidak null
+    final userData = authController.user;
     final bool isSuperAdmin =
         authController.userEmail == 'superadmin@absensi.com';
 
@@ -185,15 +187,31 @@ class ProfilAdminPage extends StatelessWidget {
           ),
           const Divider(height: 20),
 
+          // PERBAIKAN: SAFE CHECK UNTUK ID
           _buildInfoRow(
             icon: Icons.numbers,
             label: 'ID User',
-            value: authController.user['id']?.toString() ?? '-',
+            value: _getUserId(authController),
             color: isSuperAdmin ? Colors.purple : Colors.blue,
           ),
         ],
       ),
     );
+  }
+
+  // ========== FUNGSI UNTUK MENDAPATKAN USER ID DENGAN AMAN ==========
+  String _getUserId(AuthController authController) {
+    try {
+      final user = authController.user;
+      if (user is Map && user.containsKey('id')) {
+        final id = user['id'];
+        return id?.toString() ?? '-';
+      }
+      return '-';
+    } catch (e) {
+      print('❌ Error getting user ID: $e');
+      return '-';
+    }
   }
 
   Widget _buildInfoRow({
